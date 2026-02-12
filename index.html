@@ -16,17 +16,25 @@
         <div class="container">
             <div class="header-content">
                 <h1>Portal de Chamados Smarapd</h1>
-                <div class="rotation-indicator">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path d="M8 2V4M8 12V14M14 8H12M4 8H2M12.5 12.5L11 11M5 5L3.5 3.5M12.5 3.5L11 5M5 11L3.5 12.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                    <span>Rotação automática ativa</span>
-                    <button id="toggleRotation" class="rotation-toggle" aria-label="Pausar rotação">
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
-                            <rect x="2" y="2" width="3" height="8"/>
-                            <rect x="7" y="2" width="3" height="8"/>
+                <div class="header-actions">
+                    <button id="refreshButton" class="refresh-button" title="Atualizar chamados">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M17 10C17 13.866 13.866 17 10 17C6.134 17 3 13.866 3 10C3 6.134 6.134 3 10 3C12.8 3 15.2 4.667 16.333 7M17 3V7H13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
+                        <span>Atualizar</span>
                     </button>
+                    <div class="rotation-indicator">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 2V4M8 12V14M14 8H12M4 8H2M12.5 12.5L11 11M5 5L3.5 3.5M12.5 3.5L11 5M5 11L3.5 12.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <span>Rotação automática ativa</span>
+                        <button id="toggleRotation" class="rotation-toggle" aria-label="Pausar rotação">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                                <rect x="2" y="2" width="3" height="8"/>
+                                <rect x="7" y="2" width="3" height="8"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -106,6 +114,15 @@
     </main>
 
     <script src="script.js"></script>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/>
+            <path d="M6 10L9 13L14 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span id="toastMessage">Chamados atualizados!</span>
+    </div>
 </body>
 
 </html>
