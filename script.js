@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     const navLinks = document.querySelectorAll('nav a');
     const sections = document.querySelectorAll('section');
-    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1VMM-9zck6eBwCpd-WZ_PUbzSLI9sFGz2L309H7CJFlc/export?format=csv&gid=330906161';
+    // Use the gviz endpoint which is more reliable for direct fetching
+    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1VMM-9zck6eBwCpd-WZ_PUbzSLI9sFGz2L309H7CJFlc/gviz/tq?tqx=out:csv&gid=330906161';
 
     // Order of rotation: Abertos -> Andamento -> Resolvidos
     const rotationOrder = ['abertos', 'andamento', 'resolvidos'];
@@ -14,15 +15,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function fetchTickets() {
         console.log('Fetching tickets...');
+
         fetch(SHEET_URL)
-            .then(response => response.text())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
             .then(csvText => {
+                // Determine if we got an error HTML page instead of CSV (common with permission errors)
+                if (csvText.includes('<!DOCTYPE html>') || csvText.includes('<html')) {
+                    throw new Error('Received HTML instead of CSV. Check sheet permissions (must be "Anyone with the link").');
+                }
+
                 const tickets = parseCSV(csvText);
                 console.log('Parsed tickets:', tickets);
                 renderTickets(tickets);
                 startRotation(); // Start rotation after data is loaded
             })
-            .catch(error => console.error('Error fetching tickets:', error));
+            .catch(error => {
+                console.error('Error fetching tickets:', error);
+
+                // Show error on the page
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'error-message';
+                errorMsg.style.color = 'red';
+                errorMsg.style.textAlign = 'center';
+                errorMsg.style.padding = '20px';
+                errorMsg.innerHTML = `
+                    <p>Erro ao carregar dados: ${error.message}</p>
+                    <p>Verifique se a planilha está publicada na web (Arquivo > Compartilhar > Publicar na web).</p>
+                `;
+
+                document.querySelectorAll('.cards-container').forEach(container => {
+                    container.innerHTML = '';
+                    container.appendChild(errorMsg.cloneNode(true));
+                });
+            });
     }
 
     function parseCSV(csvText) {
