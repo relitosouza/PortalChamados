@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Chamados Smarapd</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <h1>Portal de Chamados Smarapd</h1>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="#" class="active" data-target="abertos">Chamados Abertos</a></li>
+                <li><a href="#" data-target="andamento">Chamados em Andamento</a></li>
+                <li><a href="#" data-target="resolvidos">Chamados Resolvidos</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section id="abertos" class="active">
+            <h2>Chamados Abertos</h2>
+            <div class="cards-container">
+                <!-- Cards will be populated here -->
+                <div class="card status-aberto" data-id="1023">
+                    <div class="card-header">
+                        <span class="ticket-id">#1023</span>
+                        <span class="status-badge">Aberto</span>
+                    </div>
+                    <h3>Erro no sistema de login</h3>
+                    <p>Usuário relata impossibilidade de acessar o sistema após a última atualização.</p>
+                    <div class="card-footer">
+                        <span>Há 2 horas</span>
+                        <span class="timer"></span> <!-- Timer added -->
+                        <button>Ver Detalhes</button>
+                    </div>
+                </div>
+                <div class="card status-aberto" data-id="1024">
+                    <div class="card-header">
+                        <span class="ticket-id">#1024</span>
+                        <span class="status-badge">Aberto</span>
+                    </div>
+                    <h3>Solicitação de novo acesso</h3>
+                    <p>Novo colaborador precisa de credenciais para o módulo financeiro.</p>
+                    <div class="card-footer">
+                        <span>Há 4 horas</span>
+                        <span class="timer"></span> <!-- Timer added -->
+                        <button>Ver Detalhes</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="andamento">
+            <h2>Chamados em Andamento</h2>
+            <div class="cards-container">
+                <div class="card status-andamento" data-id="1020">
+                    <div class="card-header">
+                        <span class="ticket-id">#1020</span>
+                        <span class="status-badge">Em Andamento</span>
+                    </div>
+                    <h3>Lentidão no relatório mensal</h3>
+                    <p>A equipe de desenvolvimento está investigando o gargalo no banco de dados.</p>
+                    <div class="card-footer">
+                        <span>Há 1 dia</span>
+                        <span class="timer"></span> <!-- Timer added -->
+                        <button>Ver Detalhes</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="resolvidos">
+            <h2>Chamados Resolvidos</h2>
+            <div class="cards-container">
+                <div class="card status-resolvido" data-id="1015">
+                    <div class="card-header">
+                        <span class="ticket-id">#1015</span>
+                        <span class="status-badge">Resolvido</span>
+                    </div>
+                    <h3>Impressora desconectada</h3>
+                    <p>Configuração de IP refeita e impressora funcionando normalmente.</p>
+                    <div class="card-footer">
+                        <span>Há 2 dias</span>
+                        <button>Ver Detalhes</button>
+                    </div>
+                </div>
+                <div class="card status-resolvido">
+                    <div class="card-header">
+                        <span class="ticket-id">#1012</span>
+                        <span class="status-badge">Resolvido</span>
+                    </div>
+                    <h3>Erro 404 na página de contatos</h3>
+                    <p>Link corrigido no CMS.</p>
+                    <div class="card-footer">
+                        <span>Há 3 dias</span>
+                        <button>Ver Detalhes</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

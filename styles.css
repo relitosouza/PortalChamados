@@ -1,0 +1,231 @@
+:root {
+    --primary-color: #0f172a;
+    /* Slate 900 */
+    --secondary-color: #eff6ff;
+    /* Blue 50 */
+    --accent-blue: #3b82f6;
+    /* Blue 500 */
+    --text-color: #334155;
+    /* Slate 700 */
+    --heading-color: #1e293b;
+    /* Slate 800 */
+    --card-bg: #ffffff;
+    --border-color: #e2e8f0;
+    /* Slate 200 */
+
+    --status-aberto-bg: #fef2f2;
+    --status-aberto-text: #ef4444;
+
+    --status-andamento-bg: #fffbeb;
+    --status-andamento-text: #f59e0b;
+
+    --status-resolvido-bg: #f0fdf4;
+    --status-resolvido-text: #22c55e;
+
+    --font-family: 'Inter', sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Header */
+header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 20px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+/* Navigation */
+nav {
+    background-color: white;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 30px;
+}
+
+nav a {
+    text-decoration: none;
+    color: var(--text-color);
+    font-weight: 500;
+    padding: 20px 0;
+    display: inline-block;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+nav a:hover {
+    color: var(--accent-blue);
+}
+
+nav a.active {
+    color: var(--accent-blue);
+    border-bottom-color: var(--accent-blue);
+}
+
+/* Main Content */
+main {
+    padding: 40px 20px;
+}
+
+section {
+    display: none;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+section.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+h2 {
+    color: var(--heading-color);
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+}
+
+/* Cards */
+.cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.ticket-id {
+    font-weight: 600;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-aberto .status-badge {
+    background-color: var(--status-aberto-bg);
+    color: var(--status-aberto-text);
+}
+
+.status-andamento .status-badge {
+    background-color: var(--status-andamento-bg);
+    color: var(--status-andamento-text);
+}
+
+.status-resolvido .status-badge {
+    background-color: var(--status-resolvido-bg);
+    color: var(--status-resolvido-text);
+}
+
+.card h3 {
+    color: var(--heading-color);
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+}
+
+.card p {
+    color: var(--text-color);
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+    flex-grow: 1;
+}
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+.card-footer span {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.card-footer .timer {
+    font-weight: bold;
+    color: var(--accent-blue);
+    font-family: monospace;
+    font-size: 1rem;
+}
+
+.card-footer button {
+    background-color: transparent;
+    color: var(--accent-blue);
+    border: 1px solid var(--accent-blue);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.card-footer button:hover {
+    background-color: var(--accent-blue);
+    color: white;
+}
