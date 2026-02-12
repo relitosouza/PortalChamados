@@ -6,12 +6,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterButtons = document.querySelectorAll('.filter-btn');
     const toggleRotationBtn = document.getElementById('toggleRotation');
     const rotationIndicator = document.querySelector('.rotation-indicator');
+    const refreshButton = document.getElementById('refreshButton');
     
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1VMM-9zck6eBwCpd-WZ_PUbzSLI9sFGz2L309H7CJFlc/gviz/tq?tqx=out:csv&gid=330906161';
 
     const rotationOrder = ['abertos', 'andamento', 'resolvidos'];
     let currentIndex = 0;
-    const rotationIntervalTime = 20000; // 20 seconds
+    const rotationIntervalTime = 5000; // 5 seconds
     let rotationInterval;
     let isRotationActive = true;
     
@@ -21,6 +22,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Fetch and Render Tickets
     fetchTickets();
+
+    // Auto-refresh quando a página voltar ao foco (usuário voltou da página de detalhes)
+    let lastFetchTime = Date.now();
+    const AUTO_REFRESH_INTERVAL = 10000; // 10 segundos de intervalo mínimo entre refreshes
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            // Página voltou ao foco
+            const timeSinceLastFetch = Date.now() - lastFetchTime;
+            
+            if (timeSinceLastFetch > AUTO_REFRESH_INTERVAL) {
+                console.log('Página voltou ao foco - atualizando chamados...');
+                fetchTickets();
+                lastFetchTime = Date.now();
+            }
+        }
+    });
+
+    // Refresh periódico a cada 2 minutos (enquanto a página estiver visível)
+    setInterval(() => {
+        if (!document.hidden) {
+            console.log('Refresh automático - atualizando chamados...');
+            fetchTickets();
+            lastFetchTime = Date.now();
+        }
+    }, 120000); // 2 minutos
+
+    // Botão de refresh manual
+    refreshButton.addEventListener('click', () => {
+        console.log('Refresh manual acionado');
+        refreshButton.classList.add('refreshing');
+        
+        fetchTickets();
+        lastFetchTime = Date.now();
+        
+        // Remover classe de animação após 600ms
+        setTimeout(() => {
+            refreshButton.classList.remove('refreshing');
+        }, 600);
+    });
 
     function fetchTickets() {
         console.log('Fetching tickets...');
@@ -42,7 +83,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 allTickets = tickets;
                 renderTickets(tickets);
                 updateCounts();
-                startRotation();
+                
+                // Mostrar toast apenas se não for o primeiro carregamento
+                if (lastFetchTime > 0) {
+                    showToast('Chamados atualizados!');
+                }
+                
+                if (!rotationInterval) {
+                    startRotation();
+                }
             })
             .catch(error => {
                 console.error('Error fetching tickets:', error);
@@ -366,6 +415,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (rotationInterval) clearInterval(rotationInterval);
         rotationInterval = setInterval(rotateView, rotationIntervalTime);
     }
+
+    // Função para mostrar toast de notificação
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        
+        toastMessage.textContent = message;
+        toast.classList.add('show');
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
 });
-
-
