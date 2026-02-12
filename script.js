@@ -28,6 +28,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const SCROLL_PAUSE_TOP = 2000; 
     const SCROLL_PAUSE_BOTTOM = 3000; 
 
+    // Função para verificar se é Mobile
+    const isMobile = () => window.innerWidth <= 768;
+
     fetchTickets();
 
     let lastFetchTime = Date.now();
@@ -65,6 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleScrollBtn.classList.remove('active');
             showToast('Auto-scroll desativado');
         } else {
+            if (isMobile()) {
+                showToast('Auto-scroll não recomendado em celulares');
+                return;
+            }
             scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
             startAutoScroll();
             toggleScrollBtn.classList.add('active');
@@ -81,15 +88,18 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(csvText => {
                 const tickets = parseCSV(csvText);
                 allTickets = tickets;
-                
-                // LOG PARA DESENVOLVEDOR: Veja os nomes das colunas no F12
-                if(tickets.length > 0) console.log("Cabeçalhos detectados:", Object.keys(tickets[0]));
-
                 renderTickets(tickets);
                 updateCounts();
                 if (lastFetchTime > 0) showToast('Chamados atualizados!');
                 if (!rotationInterval) startRotation();
-                startAutoScroll();
+                
+                // Inicia auto-scroll apenas se não for mobile
+                if (!isMobile()) {
+                    startAutoScroll();
+                    toggleScrollBtn.classList.add('active');
+                } else {
+                    toggleScrollBtn.classList.remove('active');
+                }
             })
             .catch(error => {
                 console.error('Error fetching tickets:', error);
@@ -134,16 +144,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const val = values[index] !== undefined ? values[index] : '';
                 ticket[header] = val.trim();
             });
-            // Armazenamos a ordem original das colunas para facilitar busca por letra (Coluna G = index 6)
             ticket._rawKeys = headers; 
             return ticket;
         });
     }
 
     function getPersonName(ticket) {
-        // Tenta buscar pelo nome da coluna G (index 6) ou nomes prováveis
-        const colGName = ticket._rawKeys[6];
-        return ticket[colGName] || ticket['Nome'] || ticket['Solicitante'] || ticket['NOME'] || 'Não informado';
+        // Busca na Coluna G (índice 6)
+        const colGName = ticket._rawKeys ? ticket._rawKeys[6] : null;
+        return ticket[colGName] || ticket['Nome'] || ticket['Solicitante'] || 'Não informado';
     }
 
     function renderTickets(tickets) {
@@ -156,11 +165,15 @@ document.addEventListener('DOMContentLoaded', () => {
         filteredTickets.forEach(ticket => {
             const id = ticket['Numero do Chamado'];
             const title = ticket['Titulo'];
-            const description = ticket['Assunto'];
-            const person = getPersonName(ticket); // Usa a nova lógica de busca
+            const rawDescription = (ticket['Assunto'] || '').trim();
+            const person = getPersonName(ticket);
             const statusRaw = ticket['Status'] ? ticket['Status'].toLowerCase() : '';
             const timestamp = ticket['Carimbo de data/hora'];
             const system = ticket['Sistema'] ? ticket['Sistema'].trim() : '';
+
+            // Lógica rigorosa de 12 palavras
+            const words = rawDescription.split(/\s+/).filter(w => w.length > 0);
+            const truncatedDescription = words.length > 12 ? words.slice(0, 12).join(' ') + '...' : rawDescription;
 
             let targetSectionId = '';
             let statusClass = '';
@@ -170,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 targetSectionId = 'abertos';
                 statusClass = 'status-aberto';
                 statusLabel = 'Aberto';
-            } else if (statusRaw.includes('andamento') || statusRaw.includes('em andamento')) {
+            } else if (statusRaw.includes('andamento')) {
                 targetSectionId = 'andamento';
                 statusClass = 'status-andamento';
                 statusLabel = 'Em Andamento';
@@ -180,11 +193,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 statusLabel = 'Resolvido';
             } else { return; }
 
-            const words = description.split(/\s+/);
-            const truncatedDescription = words.length > 12 ? words.slice(0, 12).join(' ') + '...' : description;
-
             let systemClass = '';
-            const systemNormalized = system.toLowerCase().trim();
+            const systemNormalized = system.toLowerCase();
             if (systemNormalized.includes('cp')) systemClass = 'system-cp';
             else if (systemNormalized.includes('am')) systemClass = 'system-am';
             else if (systemNormalized.includes('transpar')) systemClass = 'system-transparencia';
@@ -203,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                     <span>${person}</span>
                 </div>
-                <p title="${description}">${truncatedDescription}</p>
+                <p class="ticket-desc">${truncatedDescription}</p>
                 <div class="card-footer">
                     <span>${timestamp || ''}</span>
                     <a href="detalhes.html?id=${encodeURIComponent(id)}" class="btn-details">Ver Detalhes</a>
@@ -239,7 +249,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ... Resto das funções de contagem e scroll (iguais ao anterior)
     function updateCounts() {
         const counts = { abertos: 0, andamento: 0, resolvidos: 0 };
         const filteredTickets = filterTickets(allTickets);
@@ -258,14 +267,14 @@ document.addEventListener('DOMContentLoaded', () => {
         sections.forEach(section => {
             const container = section.querySelector('.cards-container');
             const noResults = section.querySelector('.no-results');
-            const hasCards = container.querySelectorAll('.card').length > 0;
+            const hasCards = container ? container.querySelectorAll('.card').length > 0 : false;
             if (noResults) noResults.style.display = hasCards ? 'none' : 'block';
         });
     }
 
     function showError(message) {
         document.querySelectorAll('.cards-container').forEach(container => {
-            container.innerHTML = `<div class="error-message">Erro ao carregar dados: ${message}</div>`;
+            container.innerHTML = `<div class="error-message">Erro: ${message}</div>`;
         });
     }
 
@@ -339,12 +348,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showToast(message) {
         const toast = document.getElementById('toast');
-        document.getElementById('toastMessage').textContent = message;
+        const msgEl = document.getElementById('toastMessage');
+        if (msgEl) msgEl.textContent = message;
         toast.classList.add('show');
         setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
     function startAutoScroll() {
+        if (isMobile()) return; // Trava de segurança para mobile
         if (autoScrollInterval) clearInterval(autoScrollInterval);
         isAutoScrolling = true;
         let direction = 'down';
@@ -352,7 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
         autoScrollInterval = setInterval(() => {
             if (!isAutoScrolling || isPaused || document.hidden) return;
             const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-            if (maxScroll <= 100) return;
+            if (maxScroll <= 50) return;
             if (direction === 'down') {
                 scrollPosition += SCROLL_SPEED;
                 if (scrollPosition >= maxScroll) {
