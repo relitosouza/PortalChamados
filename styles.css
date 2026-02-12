@@ -207,12 +207,6 @@ h2 {
     color: #64748b;
 }
 
-.card-footer .timer {
-    font-weight: bold;
-    color: var(--accent-blue);
-    font-family: monospace;
-    font-size: 1rem;
-}
 
 .card-footer button {
     background-color: transparent;
