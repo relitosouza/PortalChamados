@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const rotationOrder = ['abertos', 'andamento', 'resolvidos'];
     let currentIndex = 0;
-    const rotationIntervalTime = 20000; // 5 seconds
+    const rotationIntervalTime = 5000; // 5 seconds
     let rotationInterval;
     let isRotationActive = true;
     
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let autoScrollInterval;
     let isAutoScrolling = false;
     let scrollPosition = 0;
-    const SCROLL_SPEED = 1; // pixels por frame
+    const SCROLL_SPEED = 2; // pixels por frame (aumentado para ser mais visível)
     const SCROLL_PAUSE_TOP = 2000; // pausa no topo (ms)
     const SCROLL_PAUSE_BOTTOM = 3000; // pausa no fundo (ms)
 
@@ -79,11 +79,14 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleScrollBtn.classList.remove('active');
             toggleScrollBtn.title = 'Auto-scroll desativado';
             showToast('Auto-scroll desativado');
+            console.log('Auto-scroll desativado');
         } else {
+            scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
             startAutoScroll();
             toggleScrollBtn.classList.add('active');
             toggleScrollBtn.title = 'Auto-scroll ativo';
             showToast('Auto-scroll ativado');
+            console.log('Auto-scroll ativado');
         }
     });
 
@@ -463,21 +466,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         isAutoScrolling = true;
-        let direction = 'down'; // 'down' or 'up'
+        scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+        let direction = 'down';
         let isPaused = false;
+        
+        console.log('Auto-scroll iniciado. Posição inicial:', scrollPosition);
         
         autoScrollInterval = setInterval(() => {
             if (!isAutoScrolling || isPaused || document.hidden) return;
             
-            const currentSection = document.querySelector('section.active');
-            if (!currentSection) return;
+            // Calcular altura máxima de scroll
+            const documentHeight = Math.max(
+                document.body.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.clientHeight,
+                document.documentElement.scrollHeight,
+                document.documentElement.offsetHeight
+            );
+            const windowHeight = window.innerHeight;
+            const maxScroll = documentHeight - windowHeight;
             
-            const container = currentSection.querySelector('.cards-container');
-            if (!container) return;
-            
-            const maxScroll = container.scrollHeight - container.clientHeight;
-            
-            if (maxScroll <= 0) return; // Não há conteúdo suficiente para scroll
+            if (maxScroll <= 100) {
+                console.log('Conteúdo insuficiente para scroll. Max:', maxScroll);
+                return;
+            }
             
             if (direction === 'down') {
                 scrollPosition += SCROLL_SPEED;
@@ -486,10 +498,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     scrollPosition = maxScroll;
                     direction = 'up';
                     isPaused = true;
+                    console.log('Chegou ao fundo, pausando...');
                     
                     // Pausa no fundo
                     setTimeout(() => {
                         isPaused = false;
+                        console.log('Retomando scroll para cima');
                     }, SCROLL_PAUSE_BOTTOM);
                 }
             } else {
@@ -499,18 +513,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     scrollPosition = 0;
                     direction = 'down';
                     isPaused = true;
+                    console.log('Chegou ao topo, pausando...');
                     
                     // Pausa no topo
                     setTimeout(() => {
                         isPaused = false;
+                        console.log('Retomando scroll para baixo');
                     }, SCROLL_PAUSE_TOP);
                 }
             }
             
-            window.scrollTo({
-                top: scrollPosition,
-                behavior: 'auto'
-            });
+            window.scrollTo(0, scrollPosition);
         }, 16); // ~60fps
     }
     
@@ -526,22 +539,33 @@ document.addEventListener('DOMContentLoaded', () => {
     
     ['mousedown', 'wheel', 'touchstart', 'keydown'].forEach(event => {
         document.addEventListener(event, () => {
-            stopAutoScroll();
-            
-            // Retomar após 5 segundos de inatividade
-            clearTimeout(userInteractionTimeout);
-            userInteractionTimeout = setTimeout(() => {
-                startAutoScroll();
-            }, 5000);
+            if (isAutoScrolling) {
+                stopAutoScroll();
+                
+                // Retomar após 5 segundos de inatividade
+                clearTimeout(userInteractionTimeout);
+                userInteractionTimeout = setTimeout(() => {
+                    // Resetar posição para posição atual da janela
+                    scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+                    startAutoScroll();
+                }, 5000);
+            }
         }, { passive: true });
     });
     
     // Pausar auto-scroll quando muda de aba
     navLinks.forEach(link => {
-        const originalClickHandler = link.onclick;
         link.addEventListener('click', (e) => {
-            scrollPosition = 0; // Reset scroll position ao mudar de aba
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Reset scroll position ao mudar de aba
+            setTimeout(() => {
+                scrollPosition = 0;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                if (isAutoScrolling && toggleScrollBtn.classList.contains('active')) {
+                    setTimeout(() => {
+                        startAutoScroll();
+                    }, 500);
+                }
+            }, 100);
         });
     });
 });
