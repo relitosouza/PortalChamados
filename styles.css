@@ -510,6 +510,26 @@ h2 {
     gap: 8px;
 }
 
+
+.card-requester {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+    color: var(--accent-blue);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    background: rgba(59, 130, 246, 0.05);
+    padding: 4px 8px;
+    border-radius: 6px;
+    width: fit-content;
+}
+
+.card-requester svg {
+    opacity: 0.8;
+}
+
 .ticket-id {
     font-weight: 700;
     color: var(--heading-color);
