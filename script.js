@@ -154,6 +154,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 return; // Skip if status is not recognized
             }
 
+            // Truncate description to 12 words
+            const words = description.split(/\s+/);
+            const truncatedDescription = words.length > 12 ? words.slice(0, 12).join(' ') + '...' : description;
+
+            // System Badge Class
+            let systemClass = '';
+            if (system && system.toLowerCase() === 'cp') systemClass = 'system-cp';
+            else if (system && system.toLowerCase() === 'am') systemClass = 'system-am';
+            else if (system && system.toLowerCase().includes('transparencia')) systemClass = 'system-transparencia';
+
             const card = document.createElement('div');
             card.className = `card ${statusClass}`;
             card.dataset.id = id;
@@ -167,13 +177,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="card-header">
                     <span class="ticket-id">#${id}</span>
                     <span class="status-badge">${statusLabel}</span>
-                    ${system ? `<span class="system-badge" style="font-size: 0.8em; background: #eee; padding: 2px 6px; border-radius: 4px; margin-left: auto;">${system}</span>` : ''}
+                    ${system ? `<span class="system-badge ${systemClass}" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; margin-left: auto;">${system}</span>` : ''}
                 </div>
                 <h3>${title}</h3>
-                <p>${description}</p>
+                <p title="${description}">${truncatedDescription}</p>
                 <div class="card-footer">
                     <span>${timeDisplay}</span>
-                    <button>Ver Detalhes</button>
+                    <a href="detalhes.html?id=${encodeURIComponent(id)}" class="btn-details">Ver Detalhes</a>
                 </div>
             `;
 
