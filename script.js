@@ -1,14 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
     const navLinks = document.querySelectorAll('nav a');
     const sections = document.querySelectorAll('section');
-    // Use the gviz endpoint which is more reliable for direct fetching
+    const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearch');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const toggleRotationBtn = document.getElementById('toggleRotation');
+    const rotationIndicator = document.querySelector('.rotation-indicator');
+    
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1VMM-9zck6eBwCpd-WZ_PUbzSLI9sFGz2L309H7CJFlc/gviz/tq?tqx=out:csv&gid=330906161';
 
-    // Order of rotation: Abertos -> Andamento -> Resolvidos
     const rotationOrder = ['abertos', 'andamento', 'resolvidos'];
     let currentIndex = 0;
-    const rotationIntervalTime = 5000; // 5 seconds per view
+    const rotationIntervalTime = 5000; // 5 seconds
     let rotationInterval;
+    let isRotationActive = true;
+    
+    let allTickets = [];
+    let currentFilter = 'all';
+    let currentSearchTerm = '';
 
     // Fetch and Render Tickets
     fetchTickets();
@@ -24,34 +33,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 return response.text();
             })
             .then(csvText => {
-                // Determine if we got an error HTML page instead of CSV (common with permission errors)
                 if (csvText.includes('<!DOCTYPE html>') || csvText.includes('<html')) {
-                    throw new Error('Received HTML instead of CSV. Check sheet permissions (must be "Anyone with the link").');
+                    throw new Error('Received HTML instead of CSV. Check sheet permissions.');
                 }
 
                 const tickets = parseCSV(csvText);
                 console.log('Parsed tickets:', tickets);
+                allTickets = tickets;
                 renderTickets(tickets);
-                startRotation(); // Start rotation after data is loaded
+                updateCounts();
+                startRotation();
             })
             .catch(error => {
                 console.error('Error fetching tickets:', error);
-
-                // Show error on the page
-                const errorMsg = document.createElement('div');
-                errorMsg.className = 'error-message';
-                errorMsg.style.color = 'red';
-                errorMsg.style.textAlign = 'center';
-                errorMsg.style.padding = '20px';
-                errorMsg.innerHTML = `
-                    <p>Erro ao carregar dados: ${error.message}</p>
-                    <p>Verifique se a planilha está publicada na web (Arquivo > Compartilhar > Publicar na web).</p>
-                `;
-
-                document.querySelectorAll('.cards-container').forEach(container => {
-                    container.innerHTML = '';
-                    container.appendChild(errorMsg.cloneNode(true));
-                });
+                showError(error.message);
             });
     }
 
@@ -61,9 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let currentVal = '';
         let inQuotes = false;
 
-        // Remove strictly completely empty lines if necessary, but keep the main loop robust
-        // We'll iterate manually to handle quoted newlines
-        // Normalize line endings to \n just in case
         const text = csvText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
         for (let i = 0; i < text.length; i++) {
@@ -72,21 +64,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (char === '"') {
                 if (inQuotes && nextChar === '"') {
-                    // Escaped quote ("") -> become a single quote
                     currentVal += '"';
-                    i++; // Skip the next quote
+                    i++;
                 } else {
-                    // Toggle quote state
                     inQuotes = !inQuotes;
                 }
             } else if (char === ',' && !inQuotes) {
-                // End of cell
                 currentRow.push(currentVal);
                 currentVal = '';
             } else if (char === '\n' && !inQuotes) {
-                // End of row
                 currentRow.push(currentVal);
-                if (currentRow.length > 0) { // Avoid pushing empty rows if any
+                if (currentRow.length > 0) {
                     rows.push(currentRow);
                 }
                 currentRow = [];
@@ -96,22 +84,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Handle the very last value/row if file doesn't end with \n
         if (currentVal || currentRow.length > 0) {
             currentRow.push(currentVal);
             rows.push(currentRow);
         }
 
-        // Now map to objects
         if (rows.length === 0) return [];
 
         const headers = rows[0].map(h => h.trim());
         const data = rows.slice(1).map(values => {
             const ticket = {};
             headers.forEach((header, index) => {
-                // Handle potential missing values at end of row
                 const val = values[index] !== undefined ? values[index] : '';
-                ticket[header] = val.trim(); // Trim values just in case
+                ticket[header] = val.trim();
             });
             return ticket;
         });
@@ -120,13 +105,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderTickets(tickets) {
-        // Clear existing static content if any (though we will remove it from HTML too)
+        // Clear all containers
         document.querySelector('#abertos .cards-container').innerHTML = '';
         document.querySelector('#andamento .cards-container').innerHTML = '';
         document.querySelector('#resolvidos .cards-container').innerHTML = '';
 
-        tickets.forEach(ticket => {
-            // Map Sheet Columns: Carimbo de data/hora, Numero do Chamado, Titulo, Assunto, Status, Sistema
+        const filteredTickets = filterTickets(tickets);
+
+        filteredTickets.forEach(ticket => {
             const id = ticket['Numero do Chamado'];
             const title = ticket['Titulo'];
             const description = ticket['Assunto'];
@@ -151,10 +137,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 statusClass = 'status-resolvido';
                 statusLabel = 'Resolvido';
             } else {
-                return; // Skip if status is not recognized
+                return;
             }
 
-            // Truncate description to 12 words
+            // Truncate description
             const words = description.split(/\s+/);
             const truncatedDescription = words.length > 12 ? words.slice(0, 12).join(' ') + '...' : description;
 
@@ -165,19 +151,19 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (system && system.toLowerCase().includes('transparencia')) systemClass = 'system-transparencia';
 
             const card = document.createElement('div');
-            card.className = `card ${statusClass}`;
+            card.className = `card ${statusClass} visible`;
             card.dataset.id = id;
+            card.dataset.system = system ? system.toLowerCase() : '';
+            card.dataset.title = title.toLowerCase();
+            card.dataset.description = description.toLowerCase();
 
-            // Calculate "Time Ago" (Basic implementation) -> You might want a library (e.g. date-fns) for better formatting, 
-            // but simple diff works for now. 
-            // Note: Sheet format logic might differ based on locale, assuming standard format or just displaying raw string if complex parsing needed.
             const timeDisplay = timestamp ? `Aberto em: ${timestamp}` : '';
 
             card.innerHTML = `
                 <div class="card-header">
                     <span class="ticket-id">#${id}</span>
                     <span class="status-badge">${statusLabel}</span>
-                    ${system ? `<span class="system-badge ${systemClass}" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; margin-left: auto;">${system}</span>` : ''}
+                    ${system ? `<span class="system-badge ${systemClass}">${system}</span>` : ''}
                 </div>
                 <h3>${title}</h3>
                 <p title="${description}">${truncatedDescription}</p>
@@ -192,51 +178,178 @@ document.addEventListener('DOMContentLoaded', () => {
                 container.appendChild(card);
             }
         });
+
+        // Show "no results" message if needed
+        updateNoResultsMessage();
+    }
+
+    function filterTickets(tickets) {
+        return tickets.filter(ticket => {
+            const system = ticket['Sistema'] ? ticket['Sistema'].toLowerCase() : '';
+            const title = ticket['Titulo'] ? ticket['Titulo'].toLowerCase() : '';
+            const description = ticket['Assunto'] ? ticket['Assunto'].toLowerCase() : '';
+            const id = ticket['Numero do Chamado'] ? ticket['Numero do Chamado'].toString() : '';
+
+            // Filter by system
+            const systemMatch = currentFilter === 'all' || 
+                (currentFilter === 'cp' && system === 'cp') ||
+                (currentFilter === 'am' && system === 'am') ||
+                (currentFilter === 'transparencia' && system.includes('transparencia'));
+
+            // Filter by search term
+            const searchMatch = !currentSearchTerm || 
+                title.includes(currentSearchTerm) ||
+                description.includes(currentSearchTerm) ||
+                id.includes(currentSearchTerm);
+
+            return systemMatch && searchMatch;
+        });
+    }
+
+    function updateCounts() {
+        const counts = {
+            abertos: 0,
+            andamento: 0,
+            resolvidos: 0
+        };
+
+        const filteredTickets = filterTickets(allTickets);
+
+        filteredTickets.forEach(ticket => {
+            const statusRaw = ticket['Status'] ? ticket['Status'].toLowerCase() : '';
+            if (statusRaw.includes('aberto')) counts.abertos++;
+            else if (statusRaw.includes('andamento') || statusRaw.includes('em andamento')) counts.andamento++;
+            else if (statusRaw.includes('resolvido')) counts.resolvidos++;
+        });
+
+        document.querySelectorAll('.badge-count').forEach(badge => {
+            const section = badge.dataset.section;
+            badge.textContent = counts[section] || 0;
+        });
+    }
+
+    function updateNoResultsMessage() {
+        sections.forEach(section => {
+            const container = section.querySelector('.cards-container');
+            const noResults = section.querySelector('.no-results');
+            const hasCards = container.querySelectorAll('.card').length > 0;
+            
+            if (noResults) {
+                noResults.style.display = hasCards ? 'none' : 'block';
+            }
+        });
+    }
+
+    function showError(message) {
+        const errorMsg = document.createElement('div');
+        errorMsg.className = 'error-message';
+        errorMsg.style.cssText = 'color: #dc2626; text-align: center; padding: 40px; background: #fef2f2; border-radius: 12px; border: 2px solid #fecaca;';
+        errorMsg.innerHTML = `
+            <p style="font-weight: 600; margin-bottom: 8px;">Erro ao carregar dados: ${message}</p>
+            <p style="font-size: 0.9rem;">Verifique se a planilha está publicada na web.</p>
+        `;
+
+        document.querySelectorAll('.cards-container').forEach(container => {
+            container.innerHTML = '';
+            container.appendChild(errorMsg.cloneNode(true));
+        });
     }
 
     function switchTab(targetId) {
-        // Remove active class from all links and sections
         navLinks.forEach(nav => nav.classList.remove('active'));
         sections.forEach(section => section.classList.remove('active'));
 
-        // Find and activate the link corresponding to the targetId
         const activeLink = document.querySelector(`nav a[data-target="${targetId}"]`);
         if (activeLink) {
             activeLink.classList.add('active');
         }
 
-        // Show target section
         const targetSection = document.getElementById(targetId);
         if (targetSection) {
             targetSection.classList.add('active');
         }
     }
 
-    // Manual Click Handling
+    // Search functionality
+    searchInput.addEventListener('input', (e) => {
+        currentSearchTerm = e.target.value.toLowerCase().trim();
+        renderTickets(allTickets);
+        updateCounts();
+    });
+
+    clearSearchBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        currentSearchTerm = '';
+        renderTickets(allTickets);
+        updateCounts();
+    });
+
+    // Filter functionality
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            currentFilter = btn.dataset.filter;
+            renderTickets(allTickets);
+            updateCounts();
+        });
+    });
+
+    // Rotation control
+    toggleRotationBtn.addEventListener('click', () => {
+        isRotationActive = !isRotationActive;
+        
+        if (isRotationActive) {
+            toggleRotationBtn.innerHTML = `
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                    <rect x="2" y="2" width="3" height="8"/>
+                    <rect x="7" y="2" width="3" height="8"/>
+                </svg>
+            `;
+            toggleRotationBtn.setAttribute('aria-label', 'Pausar rotação');
+            rotationIndicator.classList.remove('paused');
+            rotationIndicator.querySelector('span').textContent = 'Rotação automática ativa';
+            startRotation();
+        } else {
+            toggleRotationBtn.innerHTML = `
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                    <polygon points="3,2 3,10 10,6"/>
+                </svg>
+            `;
+            toggleRotationBtn.setAttribute('aria-label', 'Retomar rotação');
+            rotationIndicator.classList.add('paused');
+            rotationIndicator.querySelector('span').textContent = 'Rotação pausada';
+            if (rotationInterval) clearInterval(rotationInterval);
+        }
+    });
+
+    // Manual click handling
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const targetId = link.getAttribute('data-target');
-
-            // Update currentIndex to match the clicked item so rotation continues correctly
             currentIndex = rotationOrder.indexOf(targetId);
-
             switchTab(targetId);
 
             // Reset interval on manual click
-            if (rotationInterval) clearInterval(rotationInterval);
-            rotationInterval = setInterval(rotateView, rotationIntervalTime);
+            if (isRotationActive) {
+                if (rotationInterval) clearInterval(rotationInterval);
+                rotationInterval = setInterval(rotateView, rotationIntervalTime);
+            }
         });
     });
 
-    // Auto Rotation Logic
+    // Auto rotation
     function rotateView() {
+        if (!isRotationActive) return;
         currentIndex = (currentIndex + 1) % rotationOrder.length;
         const nextId = rotationOrder[currentIndex];
         switchTab(nextId);
     }
 
     function startRotation() {
+        if (!isRotationActive) return;
         if (rotationInterval) clearInterval(rotationInterval);
         rotationInterval = setInterval(rotateView, rotationIntervalTime);
     }
