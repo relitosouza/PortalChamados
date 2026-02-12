@@ -7,18 +7,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleRotationBtn = document.getElementById('toggleRotation');
     const rotationIndicator = document.querySelector('.rotation-indicator');
     const refreshButton = document.getElementById('refreshButton');
+    const toggleScrollBtn = document.getElementById('toggleScroll');
     
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1VMM-9zck6eBwCpd-WZ_PUbzSLI9sFGz2L309H7CJFlc/gviz/tq?tqx=out:csv&gid=330906161';
 
     const rotationOrder = ['abertos', 'andamento', 'resolvidos'];
     let currentIndex = 0;
-    const rotationIntervalTime = 20000; // 20 seconds
+    const rotationIntervalTime = 5000; // 5 seconds
     let rotationInterval;
     let isRotationActive = true;
     
     let allTickets = [];
     let currentFilter = 'all';
     let currentSearchTerm = '';
+    
+    // Auto-scroll configuration
+    let autoScrollInterval;
+    let isAutoScrolling = false;
+    let scrollPosition = 0;
+    const SCROLL_SPEED = 1; // pixels por frame
+    const SCROLL_PAUSE_TOP = 2000; // pausa no topo (ms)
+    const SCROLL_PAUSE_BOTTOM = 3000; // pausa no fundo (ms)
 
     // Fetch and Render Tickets
     fetchTickets();
@@ -63,6 +72,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 600);
     });
 
+    // Botão de toggle auto-scroll
+    toggleScrollBtn.addEventListener('click', () => {
+        if (isAutoScrolling) {
+            stopAutoScroll();
+            toggleScrollBtn.classList.remove('active');
+            toggleScrollBtn.title = 'Auto-scroll desativado';
+            showToast('Auto-scroll desativado');
+        } else {
+            startAutoScroll();
+            toggleScrollBtn.classList.add('active');
+            toggleScrollBtn.title = 'Auto-scroll ativo';
+            showToast('Auto-scroll ativado');
+        }
+    });
+
     function fetchTickets() {
         console.log('Fetching tickets...');
 
@@ -92,6 +116,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!rotationInterval) {
                     startRotation();
                 }
+                
+                // Iniciar auto-scroll após carregar os dados
+                startAutoScroll();
             })
             .catch(error => {
                 console.error('Error fetching tickets:', error);
@@ -428,5 +455,93 @@ document.addEventListener('DOMContentLoaded', () => {
             toast.classList.remove('show');
         }, 3000);
     }
-});
 
+    // Auto-scroll functions
+    function startAutoScroll() {
+        if (autoScrollInterval) {
+            clearInterval(autoScrollInterval);
+        }
+        
+        isAutoScrolling = true;
+        let direction = 'down'; // 'down' or 'up'
+        let isPaused = false;
+        
+        autoScrollInterval = setInterval(() => {
+            if (!isAutoScrolling || isPaused || document.hidden) return;
+            
+            const currentSection = document.querySelector('section.active');
+            if (!currentSection) return;
+            
+            const container = currentSection.querySelector('.cards-container');
+            if (!container) return;
+            
+            const maxScroll = container.scrollHeight - container.clientHeight;
+            
+            if (maxScroll <= 0) return; // Não há conteúdo suficiente para scroll
+            
+            if (direction === 'down') {
+                scrollPosition += SCROLL_SPEED;
+                
+                if (scrollPosition >= maxScroll) {
+                    scrollPosition = maxScroll;
+                    direction = 'up';
+                    isPaused = true;
+                    
+                    // Pausa no fundo
+                    setTimeout(() => {
+                        isPaused = false;
+                    }, SCROLL_PAUSE_BOTTOM);
+                }
+            } else {
+                scrollPosition -= SCROLL_SPEED;
+                
+                if (scrollPosition <= 0) {
+                    scrollPosition = 0;
+                    direction = 'down';
+                    isPaused = true;
+                    
+                    // Pausa no topo
+                    setTimeout(() => {
+                        isPaused = false;
+                    }, SCROLL_PAUSE_TOP);
+                }
+            }
+            
+            window.scrollTo({
+                top: scrollPosition,
+                behavior: 'auto'
+            });
+        }, 16); // ~60fps
+    }
+    
+    function stopAutoScroll() {
+        isAutoScrolling = false;
+        if (autoScrollInterval) {
+            clearInterval(autoScrollInterval);
+        }
+    }
+    
+    // Pausar auto-scroll quando usuário interage
+    let userInteractionTimeout;
+    
+    ['mousedown', 'wheel', 'touchstart', 'keydown'].forEach(event => {
+        document.addEventListener(event, () => {
+            stopAutoScroll();
+            
+            // Retomar após 5 segundos de inatividade
+            clearTimeout(userInteractionTimeout);
+            userInteractionTimeout = setTimeout(() => {
+                startAutoScroll();
+            }, 5000);
+        }, { passive: true });
+    });
+    
+    // Pausar auto-scroll quando muda de aba
+    navLinks.forEach(link => {
+        const originalClickHandler = link.onclick;
+        link.addEventListener('click', (e) => {
+            scrollPosition = 0; // Reset scroll position ao mudar de aba
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    });
+});
