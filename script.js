@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const description = ticket['Assunto'];
             const statusRaw = ticket['Status'] ? ticket['Status'].toLowerCase() : '';
             const timestamp = ticket['Carimbo de data/hora'];
-            const system = ticket['Sistema'];
+            const system = ticket['Sistema'] ? ticket['Sistema'].trim() : '';
 
             let targetSectionId = '';
             let statusClass = '';
@@ -144,16 +144,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const words = description.split(/\s+/);
             const truncatedDescription = words.length > 12 ? words.slice(0, 12).join(' ') + '...' : description;
 
-            // System Badge Class
+            // System Badge Class - normalized comparison
             let systemClass = '';
-            if (system && system.toLowerCase() === 'cp') systemClass = 'system-cp';
-            else if (system && system.toLowerCase() === 'am') systemClass = 'system-am';
-            else if (system && system.toLowerCase().includes('transparencia')) systemClass = 'system-transparencia';
+            const systemNormalized = system.toLowerCase().trim();
+            if (systemNormalized === 'cp' || systemNormalized.includes('cp')) {
+                systemClass = 'system-cp';
+            } else if (systemNormalized === 'am' || systemNormalized.includes('am')) {
+                systemClass = 'system-am';
+            } else if (systemNormalized.includes('transparencia') || systemNormalized.includes('transparência')) {
+                systemClass = 'system-transparencia';
+            }
 
             const card = document.createElement('div');
             card.className = `card ${statusClass} visible`;
             card.dataset.id = id;
-            card.dataset.system = system ? system.toLowerCase() : '';
+            card.dataset.system = system ? system.toLowerCase().trim() : '';
             card.dataset.title = title.toLowerCase();
             card.dataset.description = description.toLowerCase();
 
@@ -185,16 +190,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function filterTickets(tickets) {
         return tickets.filter(ticket => {
-            const system = ticket['Sistema'] ? ticket['Sistema'].toLowerCase() : '';
+            const system = ticket['Sistema'] ? ticket['Sistema'].toLowerCase().trim() : '';
             const title = ticket['Titulo'] ? ticket['Titulo'].toLowerCase() : '';
             const description = ticket['Assunto'] ? ticket['Assunto'].toLowerCase() : '';
             const id = ticket['Numero do Chamado'] ? ticket['Numero do Chamado'].toString() : '';
 
-            // Filter by system
-            const systemMatch = currentFilter === 'all' || 
-                (currentFilter === 'cp' && system === 'cp') ||
-                (currentFilter === 'am' && system === 'am') ||
-                (currentFilter === 'transparencia' && system.includes('transparencia'));
+            // Filter by system - more flexible matching
+            let systemMatch = false;
+            if (currentFilter === 'all') {
+                systemMatch = true;
+            } else if (currentFilter === 'cp') {
+                systemMatch = system === 'cp' || system.includes('cp');
+            } else if (currentFilter === 'am') {
+                systemMatch = system === 'am' || system.includes('am');
+            } else if (currentFilter === 'transparencia') {
+                systemMatch = system.includes('transparencia') || system.includes('transparência');
+            }
 
             // Filter by search term
             const searchMatch = !currentSearchTerm || 
@@ -291,6 +302,8 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.classList.add('active');
             
             currentFilter = btn.dataset.filter;
+            console.log('Filter changed to:', currentFilter);
+            console.log('Available systems in data:', [...new Set(allTickets.map(t => t['Sistema']))]);
             renderTickets(allTickets);
             updateCounts();
         });
