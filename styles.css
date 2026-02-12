@@ -223,3 +223,11 @@ h2 {
     background-color: var(--accent-blue);
     color: white;
 }
+
+.loading-text {
+    text-align: center;
+    color: var(--text-color);
+    font-style: italic;
+    grid-column: 1 / -1;
+    padding: 20px;
+}
