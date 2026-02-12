@@ -81,6 +81,10 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(csvText => {
                 const tickets = parseCSV(csvText);
                 allTickets = tickets;
+                
+                // LOG PARA DESENVOLVEDOR: Veja os nomes das colunas no F12
+                if(tickets.length > 0) console.log("Cabeçalhos detectados:", Object.keys(tickets[0]));
+
                 renderTickets(tickets);
                 updateCounts();
                 if (lastFetchTime > 0) showToast('Chamados atualizados!');
@@ -130,8 +134,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const val = values[index] !== undefined ? values[index] : '';
                 ticket[header] = val.trim();
             });
+            // Armazenamos a ordem original das colunas para facilitar busca por letra (Coluna G = index 6)
+            ticket._rawKeys = headers; 
             return ticket;
         });
+    }
+
+    function getPersonName(ticket) {
+        // Tenta buscar pelo nome da coluna G (index 6) ou nomes prováveis
+        const colGName = ticket._rawKeys[6];
+        return ticket[colGName] || ticket['Nome'] || ticket['Solicitante'] || ticket['NOME'] || 'Não informado';
     }
 
     function renderTickets(tickets) {
@@ -145,8 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const id = ticket['Numero do Chamado'];
             const title = ticket['Titulo'];
             const description = ticket['Assunto'];
-            // Tenta pegar o nome da pessoa de diferentes possíveis colunas
-            const person = ticket['Nome'] || ticket['Solicitante'] || ticket['Pessoa'] || 'Não informado';
+            const person = getPersonName(ticket); // Usa a nova lógica de busca
             const statusRaw = ticket['Status'] ? ticket['Status'].toLowerCase() : '';
             const timestamp = ticket['Carimbo de data/hora'];
             const system = ticket['Sistema'] ? ticket['Sistema'].trim() : '';
@@ -210,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const system = ticket['Sistema'] ? ticket['Sistema'].toLowerCase().trim() : '';
             const title = ticket['Titulo'] ? ticket['Titulo'].toLowerCase() : '';
             const description = ticket['Assunto'] ? ticket['Assunto'].toLowerCase() : '';
-            const person = (ticket['Nome'] || ticket['Solicitante'] || ticket['Pessoa'] || '').toLowerCase();
+            const person = getPersonName(ticket).toLowerCase();
             const id = ticket['Numero do Chamado'] ? ticket['Numero do Chamado'].toString() : '';
 
             let systemMatch = (currentFilter === 'all') || 
@@ -221,53 +232,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const searchMatch = !currentSearchTerm || 
                 title.includes(currentSearchTerm) ||
                 description.includes(currentSearchTerm) ||
-                person.includes(currentSearchTerm) || // Pesquisa pelo nome adicionada aqui
+                person.includes(currentSearchTerm) || 
                 id.includes(currentSearchTerm);
 
             return systemMatch && searchMatch;
         });
     }
-// ... (mantenha a lógica de busca igual, altere apenas a displayTicket)
 
-function displayTicket(ticket) {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('detailsContent').style.display = 'block';
-
-    const id = ticket['Numero do Chamado'];
-    const title = ticket['Titulo'];
-    const description = ticket['Assunto'];
-    const person = ticket['Nome'] || ticket['Solicitante'] || ticket['Pessoa'] || 'Não informado';
-    const statusRaw = ticket['Status'] ? ticket['Status'].toLowerCase() : '';
-    const timestamp = ticket['Carimbo de data/hora'];
-    const system = ticket['Sistema'] ? ticket['Sistema'].trim() : '';
-
-    // Lógica de Status (mesma que você já tinha)
-    let statusClass = statusRaw.includes('aberto') ? 'aberto' : (statusRaw.includes('andamento') ? 'andamento' : 'resolvido');
-    let statusLabel = statusClass === 'aberto' ? 'Aberto' : (statusClass === 'andamento' ? 'Em Andamento' : 'Resolvido');
-
-    document.getElementById('ticketId').textContent = `#${id}`;
-    document.getElementById('ticketTitle').textContent = title;
-    document.getElementById('timestamp').textContent = timestamp || 'Não informado';
-    document.getElementById('statusText').textContent = statusLabel;
-    document.getElementById('description').textContent = description;
-
-    const statusBadge = document.getElementById('statusBadge');
-    statusBadge.textContent = statusLabel;
-    statusBadge.className = `status-badge ${statusClass}`;
-
-    // Adicionar o solicitante nos campos adicionais ou criar um novo card se desejar
-    const additionalFields = document.getElementById('additionalFields');
-    const additionalInfo = document.getElementById('additionalInfo');
-    
-    // Inserir o Solicitante como primeiro item das informações adicionais
-    const requesterItem = document.createElement('div');
-    requesterItem.className = 'info-item';
-    requesterItem.innerHTML = `<label>Solicitante</label><span>${person}</span>`;
-    additionalFields.appendChild(requesterItem);
-
-    // ... (restante da sua lógica de campos dinâmicos e timeline)
-    additionalInfo.style.display = 'block';
-}
+    // ... Resto das funções de contagem e scroll (iguais ao anterior)
     function updateCounts() {
         const counts = { abertos: 0, andamento: 0, resolvidos: 0 };
         const filteredTickets = filterTickets(allTickets);
