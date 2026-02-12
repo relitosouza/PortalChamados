@@ -56,39 +56,67 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function parseCSV(csvText) {
-        const lines = csvText.trim().split('\n');
-        const headers = parseCSVLine(lines[0]);
-
-        return lines.slice(1).map(line => {
-            const values = parseCSVLine(line);
-            const ticket = {};
-            headers.forEach((header, index) => {
-                ticket[header.trim()] = values[index];
-            });
-            return ticket;
-        });
-    }
-
-    // Handled quoted values correctly
-    function parseCSVLine(text) {
-        const result = [];
-        let current = '';
+        const rows = [];
+        let currentRow = [];
+        let currentVal = '';
         let inQuotes = false;
+
+        // Remove strictly completely empty lines if necessary, but keep the main loop robust
+        // We'll iterate manually to handle quoted newlines
+        // Normalize line endings to \n just in case
+        const text = csvText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
         for (let i = 0; i < text.length; i++) {
             const char = text[i];
+            const nextChar = text[i + 1];
 
             if (char === '"') {
-                inQuotes = !inQuotes;
+                if (inQuotes && nextChar === '"') {
+                    // Escaped quote ("") -> become a single quote
+                    currentVal += '"';
+                    i++; // Skip the next quote
+                } else {
+                    // Toggle quote state
+                    inQuotes = !inQuotes;
+                }
             } else if (char === ',' && !inQuotes) {
-                result.push(current.trim());
-                current = '';
+                // End of cell
+                currentRow.push(currentVal);
+                currentVal = '';
+            } else if (char === '\n' && !inQuotes) {
+                // End of row
+                currentRow.push(currentVal);
+                if (currentRow.length > 0) { // Avoid pushing empty rows if any
+                    rows.push(currentRow);
+                }
+                currentRow = [];
+                currentVal = '';
             } else {
-                current += char;
+                currentVal += char;
             }
         }
-        result.push(current.trim());
-        return result;
+
+        // Handle the very last value/row if file doesn't end with \n
+        if (currentVal || currentRow.length > 0) {
+            currentRow.push(currentVal);
+            rows.push(currentRow);
+        }
+
+        // Now map to objects
+        if (rows.length === 0) return [];
+
+        const headers = rows[0].map(h => h.trim());
+        const data = rows.slice(1).map(values => {
+            const ticket = {};
+            headers.forEach((header, index) => {
+                // Handle potential missing values at end of row
+                const val = values[index] !== undefined ? values[index] : '';
+                ticket[header] = val.trim(); // Trim values just in case
+            });
+            return ticket;
+        });
+
+        return data;
     }
 
     function renderTickets(tickets) {
