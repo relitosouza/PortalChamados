@@ -460,11 +460,83 @@ h2 {
     letter-spacing: -0.025em;
 }
 
+/* Swiper Container */
+.cards-swiper {
+    width: 100%;
+    padding: 20px 0 60px;
+    position: relative;
+}
+
+.swiper-wrapper.cards-container {
+    display: flex;
+    align-items: stretch;
+}
+
+/* Swiper Navigation Buttons */
+.swiper-button-next,
+.swiper-button-prev {
+    color: var(--accent-blue);
+    background: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    box-shadow: var(--shadow-lg);
+    border: 2px solid var(--border-color);
+    transition: all var(--transition-speed) var(--transition-timing);
+}
+
+.swiper-button-next:after,
+.swiper-button-prev:after {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+    background: var(--accent-blue);
+    color: white;
+    border-color: var(--accent-blue);
+    transform: scale(1.1);
+}
+
+.swiper-button-disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+/* Swiper Pagination */
+.swiper-pagination {
+    bottom: 20px !important;
+}
+
+.swiper-pagination-bullet {
+    width: 12px;
+    height: 12px;
+    background: var(--border-color);
+    opacity: 1;
+    transition: all var(--transition-speed) var(--transition-timing);
+}
+
+.swiper-pagination-bullet-active {
+    background: var(--accent-blue);
+    width: 32px;
+    border-radius: 6px;
+}
+
 /* Cards */
 .cards-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 24px;
+}
+
+/* No desktop com Swiper, os cards não usam grid */
+@media (min-width: 769px) {
+    .swiper-wrapper.cards-container {
+        display: flex !important;
+        grid-template-columns: none;
+        gap: 0;
+    }
 }
 
 .card {
@@ -477,6 +549,13 @@ h2 {
     flex-direction: column;
     position: relative;
     overflow: hidden;
+    height: auto;
+}
+
+/* Swiper slide específico */
+.swiper-slide.card {
+    height: auto;
+    min-height: 400px;
 }
 
 .card::before {
@@ -606,6 +685,28 @@ h2 {
     font-weight: 500;
 }
 
+.card-requester {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--secondary-color);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-left: 3px solid var(--accent-blue);
+}
+
+.card-requester svg {
+    color: var(--accent-blue);
+    flex-shrink: 0;
+}
+
+.card-requester span {
+    font-size: 0.875rem;
+    color: var(--text-color);
+    font-weight: 600;
+}
+
 .btn-details {
     background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-blue-hover) 100%);
     color: white;
@@ -726,6 +827,29 @@ h2 {
 
     .rotation-indicator {
         justify-content: space-between;
+    }
+    
+    /* Mobile: usar grid em vez de Swiper */
+    .cards-swiper {
+        padding: 20px 0;
+    }
+    
+    .swiper-wrapper.cards-container {
+        display: grid !important;
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    /* Esconder controles do Swiper no mobile */
+    .swiper-button-next,
+    .swiper-button-prev,
+    .swiper-pagination {
+        display: none !important;
+    }
+    
+    .card {
+        height: auto !important;
+        min-height: auto !important;
     }
 
     nav ul {
