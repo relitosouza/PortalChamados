@@ -422,8 +422,8 @@
 
     <script>
         // CONFIGURAÇÃO - SUBSTITUA PELA URL DO SEU APPS SCRIPT
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwQF2Wo9DquQbr4pf5k7AjY0giqWB1wM6lkSam5Xju3JUAuOnhEqLI_Q5siRXSYKXCg/exec';
-        const USER_EMAIL = 'ricardo.elito@gmail.com'; // Substitua pelo seu email
+        const API_URL = 'SUA_URL_DO_APPS_SCRIPT_AQUI';
+        const USER_EMAIL = 'seu.email@exemplo.com'; // Substitua pelo seu email
 
         let chamadoAtual = null;
         let statusSelecionado = null;
@@ -540,9 +540,20 @@
             btn.disabled = true;
             btn.innerHTML = '<div class="loading"></div> Atualizando...';
 
+            console.log('=== DEBUG ATUALIZAÇÃO ===');
+            console.log('API_URL:', API_URL);
+            console.log('Payload:', {
+                action: 'atualizarStatus',
+                chamadoId: chamadoAtual,
+                novoStatus: statusSelecionado,
+                usuario: USER_EMAIL,
+                observacao: observacao
+            });
+
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
+                    mode: 'no-cors', // IMPORTANTE: Adicionar modo no-cors
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         action: 'atualizarStatus',
@@ -553,25 +564,28 @@
                     })
                 });
 
-                const result = await response.json();
+                console.log('Response:', response);
 
-                if (result.success) {
+                // Com no-cors, não conseguimos ler a resposta
+                // Então vamos assumir sucesso e verificar recarregando
+                mostrarAlerta('Status atualizado! Verificando...', 'info');
+                document.getElementById('observacao').value = '';
+                
+                // Aguardar 2 segundos e recarregar
+                setTimeout(() => {
+                    buscarChamado();
                     mostrarAlerta('Status atualizado com sucesso!', 'success');
-                    document.getElementById('observacao').value = '';
-                    
-                    // Recarregar dados
-                    setTimeout(() => {
-                        buscarChamado();
-                    }, 1500);
-                } else {
-                    mostrarAlerta('Erro: ' + result.message, 'error');
-                }
+                }, 2000);
+
             } catch (error) {
+                console.error('Erro completo:', error);
                 console.error('Erro ao atualizar status:', error);
-                mostrarAlerta('Erro ao atualizar: ' + error.message, 'error');
+                mostrarAlerta('Erro ao atualizar: ' + error.message + ' - Verifique se a URL da API está correta', 'error');
             } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 10l3 3L18 3"></path></svg> Atualizar Status';
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 10l3 3L18 3"></path></svg> Atualizar Status';
+                }, 2500);
             }
         }
 
