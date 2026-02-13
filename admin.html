@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Portal de Chamados Smarapd</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0f172a;
+            --accent-blue: #3b82f6;
+            --accent-blue-hover: #2563eb;
+            --success-green: #16a34a;
+            --warning-yellow: #d97706;
+            --danger-red: #dc2626;
+            --text-color: #475569;
+            --border-color: #e2e8f0;
+            --bg-color: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 24px 0;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .user-info {
+            margin-top: 8px;
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 2px solid var(--border-color);
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--primary-color);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-blue-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-success {
+            background: var(--success-green);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #15803d;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status-select {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .status-option {
+            padding: 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .status-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .status-option.aberto {
+            border-color: var(--danger-red);
+            color: var(--danger-red);
+        }
+
+        .status-option.aberto.selected {
+            background: var(--danger-red);
+            color: white;
+        }
+
+        .status-option.andamento {
+            border-color: var(--warning-yellow);
+            color: var(--warning-yellow);
+        }
+
+        .status-option.andamento.selected {
+            background: var(--warning-yellow);
+            color: white;
+        }
+
+        .status-option.resolvido {
+            border-color: var(--success-green);
+            color: var(--success-green);
+        }
+
+        .status-option.resolvido.selected {
+            background: var(--success-green);
+            color: white;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 32px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 8px;
+            bottom: 8px;
+            width: 2px;
+            background: var(--border-color);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 24px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -28px;
+            top: 4px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px var(--accent-blue);
+        }
+
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .timeline-content h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 4px;
+        }
+
+        .timeline-content p {
+            font-size: 0.875rem;
+            color: var(--text-color);
+        }
+
+        .timeline-date {
+            font-size: 0.8125rem;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .alert {
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #f0fdf4;
+            color: var(--success-green);
+            border: 2px solid #bbf7d0;
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            color: var(--danger-red);
+            border: 2px solid #fecaca;
+        }
+
+        .alert-info {
+            background: #eff6ff;
+            color: var(--accent-blue);
+            border: 2px solid #bfdbfe;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .chamado-info {
+            background: var(--bg-color);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .chamado-info h3 {
+            font-size: 1.125rem;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .chamado-info p {
+            font-size: 0.9375rem;
+            color: var(--text-color);
+            margin-bottom: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .status-select {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🛠️ Administração - Portal de Chamados</h1>
+            <div class="user-info">
+                👤 <span id="userName">Carregando...</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="alertContainer"></div>
+
+        <div class="admin-grid">
+            <!-- Coluna Esquerda: Formulário -->
+            <div class="card">
+                <h2>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    Atualizar Status do Chamado
+                </h2>
+
+                <div class="form-group">
+                    <label>Número do Chamado</label>
+                    <input type="text" id="chamadoId" placeholder="Ex: 123" />
+                </div>
+
+                <button class="btn btn-primary" onclick="buscarChamado()">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="8" cy="8" r="6"></circle>
+                        <path d="M14 14l6 6"></path>
+                    </svg>
+                    Buscar Chamado
+                </button>
+
+                <div id="chamadoDetalhes" style="display: none; margin-top: 24px;">
+                    <div class="chamado-info">
+                        <h3 id="chamadoTitulo">-</h3>
+                        <p><strong>Status Atual:</strong> <span id="chamadoStatusAtual">-</span></p>
+                        <p><strong>Sistema:</strong> <span id="chamadoSistema">-</span></p>
+                        <p><strong>Solicitante:</strong> <span id="chamadoSolicitante">-</span></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Novo Status</label>
+                        <div class="status-select" id="statusSelect">
+                            <div class="status-option aberto" data-status="Aberto" onclick="selecionarStatus('Aberto')">
+                                ⚠️ Aberto
+                            </div>
+                            <div class="status-option andamento" data-status="Em Andamento" onclick="selecionarStatus('Em Andamento')">
+                                🔄 Em Andamento
+                            </div>
+                            <div class="status-option resolvido" data-status="Resolvido" onclick="selecionarStatus('Resolvido')">
+                                ✅ Resolvido
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Observação (opcional)</label>
+                        <textarea id="observacao" rows="3" placeholder="Adicione uma observação sobre esta mudança..."></textarea>
+                    </div>
+
+                    <button class="btn btn-success" id="btnAtualizar" onclick="atualizarStatus()" disabled>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 10l3 3L18 3"></path>
+                        </svg>
+                        Atualizar Status
+                    </button>
+                </div>
+            </div>
+
+            <!-- Coluna Direita: Histórico -->
+            <div class="card">
+                <h2>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    Histórico do Chamado
+                </h2>
+
+                <div id="historico">
+                    <div class="alert alert-info">
+                        Busque um chamado para ver o histórico
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURAÇÃO - SUBSTITUA PELA URL DO SEU APPS SCRIPT
+        const API_URL = 'SUA_URL_DO_APPS_SCRIPT_AQUI';
+        const USER_EMAIL = 'seu.email@exemplo.com'; // Substitua pelo seu email
+
+        let chamadoAtual = null;
+        let statusSelecionado = null;
+        let dadosChamado = null;
+
+        // Carregar informações do usuário
+        window.addEventListener('DOMContentLoaded', () => {
+            carregarUsuario();
+        });
+
+        async function carregarUsuario() {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'validarUsuario',
+                        email: USER_EMAIL
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success && result.data.ativo) {
+                    document.getElementById('userName').textContent = result.data.nome;
+                } else {
+                    mostrarAlerta('Usuário não autorizado', 'error');
+                    document.getElementById('userName').textContent = 'Não autorizado';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar usuário:', error);
+                document.getElementById('userName').textContent = USER_EMAIL;
+            }
+        }
+
+        async function buscarChamado() {
+            const id = document.getElementById('chamadoId').value.trim();
+            
+            if (!id) {
+                mostrarAlerta('Digite o número do chamado', 'error');
+                return;
+            }
+
+            mostrarAlerta('Buscando chamado...', 'info');
+
+            try {
+                // Buscar dados do chamado na planilha (via CSV)
+                const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1VMM-9zck6eBwCpd-WZ_PUbzSLI9sFGz2L309H7CJFlc/gviz/tq?tqx=out:csv&gid=330906161';
+                const response = await fetch(SHEET_URL);
+                const csvText = await response.text();
+                
+                const chamados = parseCSV(csvText);
+                const chamado = chamados.find(c => c['Numero do Chamado'] === id);
+
+                if (chamado) {
+                    dadosChamado = chamado;
+                    mostrarDetalhesChamado(chamado);
+                    await carregarHistorico(id);
+                    limparAlerta();
+                } else {
+                    mostrarAlerta('Chamado não encontrado', 'error');
+                    document.getElementById('chamadoDetalhes').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Erro ao buscar chamado:', error);
+                mostrarAlerta('Erro ao buscar chamado: ' + error.message, 'error');
+            }
+        }
+
+        function mostrarDetalhesChamado(chamado) {
+            chamadoAtual = chamado['Numero do Chamado'];
+            
+            document.getElementById('chamadoTitulo').textContent = chamado['Titulo'];
+            document.getElementById('chamadoStatusAtual').textContent = chamado['Status'];
+            document.getElementById('chamadoSistema').textContent = chamado['Sistema'] || '-';
+            document.getElementById('chamadoSolicitante').textContent = chamado['Solicitante'] || '-';
+            
+            document.getElementById('chamadoDetalhes').style.display = 'block';
+            
+            // Limpar seleção anterior
+            document.querySelectorAll('.status-option').forEach(el => el.classList.remove('selected'));
+            statusSelecionado = null;
+            document.getElementById('btnAtualizar').disabled = true;
+        }
+
+        function selecionarStatus(status) {
+            statusSelecionado = status;
+            
+            // Atualizar UI
+            document.querySelectorAll('.status-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            document.querySelector(`[data-status="${status}"]`).classList.add('selected');
+            document.getElementById('btnAtualizar').disabled = false;
+        }
+
+        async function atualizarStatus() {
+            if (!chamadoAtual || !statusSelecionado) {
+                mostrarAlerta('Selecione um status', 'error');
+                return;
+            }
+
+            const statusAtual = dadosChamado['Status'];
+            
+            if (statusAtual === statusSelecionado) {
+                mostrarAlerta('O chamado já está neste status', 'error');
+                return;
+            }
+
+            const observacao = document.getElementById('observacao').value.trim();
+            const btn = document.getElementById('btnAtualizar');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<div class="loading"></div> Atualizando...';
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'atualizarStatus',
+                        chamadoId: chamadoAtual,
+                        novoStatus: statusSelecionado,
+                        usuario: USER_EMAIL,
+                        observacao: observacao
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    mostrarAlerta('Status atualizado com sucesso!', 'success');
+                    document.getElementById('observacao').value = '';
+                    
+                    // Recarregar dados
+                    setTimeout(() => {
+                        buscarChamado();
+                    }, 1500);
+                } else {
+                    mostrarAlerta('Erro: ' + result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar status:', error);
+                mostrarAlerta('Erro ao atualizar: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 10l3 3L18 3"></path></svg> Atualizar Status';
+            }
+        }
+
+        async function carregarHistorico(chamadoId) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'obterHistorico',
+                        chamadoId: chamadoId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success && result.data.length > 0) {
+                    renderizarHistorico(result.data);
+                } else {
+                    document.getElementById('historico').innerHTML = '<div class="alert alert-info">Nenhum histórico encontrado</div>';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar histórico:', error);
+                document.getElementById('historico').innerHTML = '<div class="alert alert-error">Erro ao carregar histórico</div>';
+            }
+        }
+
+        function renderizarHistorico(historico) {
+            const html = `
+                <div class="timeline">
+                    ${historico.map(item => `
+                        <div class="timeline-item">
+                            <div class="timeline-content">
+                                <h4>${item.statusAnterior} → ${item.statusNovo}</h4>
+                                <p>por ${item.usuario}</p>
+                                ${item.observacao ? `<p><em>"${item.observacao}"</em></p>` : ''}
+                                <span class="timeline-date">${formatarData(item.timestamp)}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            document.getElementById('historico').innerHTML = html;
+        }
+
+        function formatarData(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function mostrarAlerta(mensagem, tipo) {
+            const container = document.getElementById('alertContainer');
+            container.innerHTML = `<div class="alert alert-${tipo}">${mensagem}</div>`;
+        }
+
+        function limparAlerta() {
+            document.getElementById('alertContainer').innerHTML = '';
+        }
+
+        function parseCSV(csvText) {
+            const rows = [];
+            let currentRow = [];
+            let currentVal = '';
+            let inQuotes = false;
+            const text = csvText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const nextChar = text[i + 1];
+
+                if (char === '"') {
+                    if (inQuotes && nextChar === '"') {
+                        currentVal += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    currentRow.push(currentVal);
+                    currentVal = '';
+                } else if (char === '\n' && !inQuotes) {
+                    currentRow.push(currentVal);
+                    if (currentRow.length > 0) rows.push(currentRow);
+                    currentRow = [];
+                    currentVal = '';
+                } else {
+                    currentVal += char;
+                }
+            }
+
+            if (currentVal || currentRow.length > 0) {
+                currentRow.push(currentVal);
+                rows.push(currentRow);
+            }
+
+            if (rows.length === 0) return [];
+
+            const headers = rows[0].map(h => h.trim());
+            return rows.slice(1).map(values => {
+                const obj = {};
+                headers.forEach((header, index) => {
+                    obj[header] = values[index] ? values[index].trim() : '';
+                });
+                return obj;
+            });
+        }
+    </script>
+</body>
+</html>
