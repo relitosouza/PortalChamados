@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const rotationOrder = ['abertos', 'andamento', 'resolvidos'];
     let currentIndex = 0;
-    const rotationIntervalTime = 5000; // 5 seconds
+    const rotationIntervalTime = 15000; // 5 seconds
     let rotationInterval;
     let isRotationActive = true;
     
