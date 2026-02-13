@@ -728,25 +728,48 @@ h2 {
 }
 
 .card-requester {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: var(--secondary-color);
-    border-radius: 8px;
-    margin-bottom: 12px;
-    border-left: 3px solid var(--accent-blue);
+    gap: 7px;
+    padding: 8px 16px;
+    background: white;
+    border-radius: 20px;
+    margin-bottom: 14px;
+    border: 2px solid var(--border-color);
+    transition: all var(--transition-speed) var(--transition-timing);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    align-self: flex-start;
+}
+
+.card-requester:hover {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
+}
+
+.card-requester:hover svg {
+    color: white;
+}
+
+.card-requester:hover span {
+    color: white;
 }
 
 .card-requester svg {
     color: var(--accent-blue);
     flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    transition: color var(--transition-speed) var(--transition-timing);
 }
 
 .card-requester span {
     font-size: 0.875rem;
-    color: var(--text-color);
+    color: var(--heading-color);
     font-weight: 600;
+    letter-spacing: -0.01em;
+    transition: color var(--transition-speed) var(--transition-timing);
 }
 
 .btn-details {
