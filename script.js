@@ -249,8 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const card = document.createElement('div');
-            // Adicionar classe swiper-slide apenas no desktop
-            card.className = isMobile ? `card ${statusClass} visible` : `swiper-slide card ${statusClass} visible`;
+            card.className = `card ${statusClass} visible`;
             card.dataset.id = id;
             card.dataset.system = system ? system.toLowerCase().trim() : '';
             card.dataset.title = title.toLowerCase();
@@ -288,10 +287,56 @@ document.addEventListener('DOMContentLoaded', () => {
         // Show "no results" message if needed
         updateNoResultsMessage();
         
-        // Inicializar Swiper apenas no desktop
+        // Converter para Swiper apenas no desktop
         if (!isMobile) {
-            initSwipers();
+            convertToSwiper();
         }
+    }
+
+    // Converter containers para Swiper
+    function convertToSwiper() {
+        ['abertos', 'andamento', 'resolvidos'].forEach(sectionId => {
+            const section = document.getElementById(sectionId);
+            const container = section.querySelector('.cards-container');
+            const cards = Array.from(container.querySelectorAll('.card'));
+            
+            if (cards.length === 0) return;
+            
+            // Criar estrutura Swiper
+            const swiperWrapper = document.createElement('div');
+            swiperWrapper.className = 'swiper cards-swiper';
+            
+            const swiperContainer = document.createElement('div');
+            swiperContainer.className = 'swiper-wrapper';
+            
+            // Mover cards para swiper-wrapper e adicionar classe swiper-slide
+            cards.forEach(card => {
+                card.classList.add('swiper-slide');
+                swiperContainer.appendChild(card);
+            });
+            
+            swiperWrapper.appendChild(swiperContainer);
+            
+            // Adicionar navegação
+            const nextBtn = document.createElement('div');
+            nextBtn.className = 'swiper-button-next';
+            const prevBtn = document.createElement('div');
+            prevBtn.className = 'swiper-button-prev';
+            const pagination = document.createElement('div');
+            pagination.className = 'swiper-pagination';
+            
+            swiperWrapper.appendChild(nextBtn);
+            swiperWrapper.appendChild(prevBtn);
+            swiperWrapper.appendChild(pagination);
+            
+            // Substituir container original
+            container.parentNode.replaceChild(swiperWrapper, container);
+        });
+        
+        // Inicializar Swipers
+        setTimeout(() => {
+            initSwipers();
+        }, 100);
     }
 
     // Inicializar Swipers

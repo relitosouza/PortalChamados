@@ -460,14 +460,21 @@ h2 {
     letter-spacing: -0.025em;
 }
 
-/* Swiper Container */
+/* Cards Container - Grid padrão */
+.cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+}
+
+/* Swiper Container (quando convertido no desktop) */
 .cards-swiper {
     width: 100%;
     padding: 20px 0 60px;
     position: relative;
 }
 
-.swiper-wrapper.cards-container {
+.swiper-wrapper {
     display: flex;
     align-items: stretch;
 }
@@ -524,21 +531,6 @@ h2 {
 }
 
 /* Cards */
-.cards-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 24px;
-}
-
-/* No desktop com Swiper, os cards não usam grid */
-@media (min-width: 769px) {
-    .swiper-wrapper.cards-container {
-        display: flex !important;
-        grid-template-columns: none;
-        gap: 0;
-    }
-}
-
 .card {
     background: var(--card-bg);
     border: 2px solid var(--border-color);
@@ -829,22 +821,10 @@ h2 {
         justify-content: space-between;
     }
     
-    /* Mobile: usar grid em vez de Swiper */
-    .cards-swiper {
-        padding: 20px 0;
-    }
-    
-    .swiper-wrapper.cards-container {
-        display: grid !important;
+    /* Mobile: Grid normal */
+    .cards-container {
         grid-template-columns: 1fr;
         gap: 16px;
-    }
-    
-    /* Esconder controles do Swiper no mobile */
-    .swiper-button-next,
-    .swiper-button-prev,
-    .swiper-pagination {
-        display: none !important;
     }
     
     .card {
