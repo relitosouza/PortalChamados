@@ -1,9 +1,153 @@
-/* ... manter suas variáveis :root ... */
+/* PORTAL DE CHAMADOS SMARAPD - OSASCO
+   CSS CONSIDALADO: SWIPER SLIDER + RESPONSIVIDADE + CARDS
+*/
 
+:root {
+    --primary-color: #0f172a;
+    --secondary-color: #f8fafc;
+    --accent-blue: #3b82f6;
+    --accent-blue-hover: #2563eb;
+    --text-color: #475569;
+    --heading-color: #0f172a;
+    --card-bg: #ffffff;
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+
+    /* Status Colors */
+    --status-aberto-bg: #fef2f2;
+    --status-aberto-text: #dc2626;
+    --status-andamento-bg: #fffbeb;
+    --status-andamento-text: #d97706;
+    --status-resolvido-bg: #f0fdf4;
+    --status-resolvido-text: #16a34a;
+
+    /* System Colors */
+    --system-cp-bg: #eff6ff;
+    --system-cp-text: #1e40af;
+    --system-am-bg: #fdf4ff;
+    --system-am-text: #a21caf;
+    --system-transparencia-bg: #ecfeff;
+    --system-transparencia-text: #0e7490;
+
+    --font-family: 'Inter', sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Header & Actions */
+header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: white;
+    padding: 24px 0;
+    box-shadow: var(--shadow-md);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.refresh-button, .scroll-toggle {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.scroll-toggle.active {
+    background: #22c55e;
+    border-color: #16a34a;
+}
+
+/* Navigation & Tabs */
+nav {
+    background: white;
+    border-bottom: 2px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+nav ul {
+    display: flex;
+    list-style: none;
+}
+
+nav a {
+    text-decoration: none;
+    color: var(--text-color);
+    padding: 20px;
+    display: block;
+    font-weight: 600;
+    border-bottom: 3px solid transparent;
+}
+
+nav a.active {
+    color: var(--accent-blue);
+    border-bottom-color: var(--accent-blue);
+}
+
+.badge-count {
+    background: var(--border-color);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+}
+
+/* Filters */
+.filters-bar {
+    background: white;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.search-box {
+    position: relative;
+    flex: 1;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+}
+
+/* Swiper Slider Desktop */
 .swiper-container {
     position: relative;
     width: 100%;
-    padding: 20px 0 50px 0;
+    padding: 20px 0 50px 0; /* Espaço para paginação */
 }
 
 .swiper-slide {
@@ -12,57 +156,104 @@
     justify-content: center;
 }
 
+/* Card Styles */
 .card {
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px;
     width: 100%;
-    margin: 0;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.card-header {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.ticket-id {
+    font-weight: 700;
+    color: var(--heading-color);
 }
 
 .card-requester {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     margin-bottom: 12px;
     color: var(--accent-blue);
     font-size: 0.85rem;
     font-weight: 600;
     text-transform: uppercase;
     background: rgba(59, 130, 246, 0.08);
-    padding: 6px 10px;
+    padding: 6px 12px;
     border-radius: 6px;
     width: fit-content;
 }
 
 .ticket-desc {
     font-size: 0.95rem;
-    line-height: 1.5;
     color: var(--text-color);
-    margin-bottom: 15px;
-    min-height: 3em;
+    margin-bottom: 20px;
+    min-height: 3em; /* Mantém alinhamento */
 }
 
-/* Custom Swiper Buttons */
+/* Badges de Status */
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.status-abertos .status-badge { background: var(--status-aberto-bg); color: var(--status-aberto-text); }
+.status-andamento .status-badge { background: var(--status-andamento-bg); color: var(--status-andamento-text); }
+.status-resolvidos .status-badge { background: var(--status-resolvido-bg); color: var(--status-resolvido-text); }
+
+/* Swiper Navigation */
 .swiper-button-next, .swiper-button-prev {
-    color: var(--accent-blue);
+    color: var(--accent-blue) !important;
     background: white;
-    width: 40px;
-    height: 40px;
+    width: 44px !important;
+    height: 44px !important;
     border-radius: 50%;
     box-shadow: var(--shadow-md);
 }
 
 .swiper-button-next:after, .swiper-button-prev:after {
-    font-size: 18px;
-    font-weight: bold;
+    font-size: 18px !important;
 }
 
 .swiper-pagination-bullet-active {
-    background: var(--accent-blue);
+    background: var(--accent-blue) !important;
 }
 
-/* Mobile: manter grid ou slider simples */
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #1e293b;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    transform: translateY(100px);
+    transition: 0.4s;
+}
+
+.toast.show { transform: translateY(0); }
+
+/* Responsividade Mobile */
 @media (max-width: 768px) {
-    .swiper-container { padding: 10px 0 40px 0; }
-    .swiper-button-next, .swiper-button-prev { display: none; }
+    .header-content { flex-direction: column; gap: 15px; }
+    .swiper-button-next, .swiper-button-prev { display: none !important; }
+    .swiper-container { padding-bottom: 30px; }
+    nav ul { overflow-x: auto; }
 }
