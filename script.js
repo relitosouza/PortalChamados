@@ -241,9 +241,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Truncate description
-            const words = description.split(/\s+/);
-            const truncatedDescription = words.length > 12 ? words.slice(0, 12).join(' ') + '...' : description;
+            // Truncate description - melhorado para garantir exatamente 12 palavras
+            const words = description
+                .trim()                           // Remove espaços do início e fim
+                .replace(/\s+/g, ' ')            // Substitui múltiplos espaços por um único
+                .split(' ')                       // Divide em palavras
+                .filter(word => word.length > 0); // Remove strings vazias
+            
+            const truncatedDescription = words.length > 12 
+                ? words.slice(0, 12).join(' ') + '...' 
+                : description.trim();
+            
+            // Debug: log se descrição foi truncada
+            if (words.length > 12) {
+                console.log(`Descrição truncada: ${words.length} palavras -> 12 palavras (ID: ${id})`);
+            }
 
             // System Badge Class - normalized comparison
             let systemClass = '';
