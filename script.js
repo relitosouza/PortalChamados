@@ -219,7 +219,54 @@ document.addEventListener('DOMContentLoaded', () => {
             const statusRaw = ticket['Status'] ? ticket['Status'].toLowerCase() : '';
             const timestamp = ticket['Carimbo de data/hora'];
             const system = ticket['Sistema'] ? ticket['Sistema'].trim() : '';
-            const requester = ticket['Solicitante'] || 'Não informado'; // Coluna G
+            
+            // Tentar pegar solicitante de várias formas possíveis
+            // Testa variações comuns do nome da coluna
+            const possibleRequesterKeys = [
+                'Solicitante',
+                'solicitante', 
+                'SOLICITANTE',
+                'Nome do Solicitante',
+                'Nome Solicitante',
+                'Solicitado por',
+                'Criado por',
+                'Usuário',
+                'Usuario',
+                'Nome'
+            ];
+            
+            let requester = 'Não informado';
+            
+            // Procura a primeira coluna que existe e tem valor
+            for (const key of possibleRequesterKeys) {
+                if (ticket[key] && ticket[key].trim()) {
+                    requester = ticket[key].trim();
+                    break;
+                }
+            }
+            
+            // Se ainda não encontrou, tenta buscar por coluna que contenha "solicit" ou "nome"
+            if (requester === 'Não informado') {
+                const keys = Object.keys(ticket);
+                for (const key of keys) {
+                    const lowerKey = key.toLowerCase();
+                    if ((lowerKey.includes('solicit') || lowerKey.includes('nome') || lowerKey.includes('criado') || lowerKey.includes('usuario') || lowerKey.includes('usuário')) 
+                        && ticket[key] && ticket[key].trim() && ticket[key].trim() !== '') {
+                        requester = ticket[key].trim();
+                        console.log(`Campo solicitante encontrado na coluna: "${key}" = "${requester}"`);
+                        break;
+                    }
+                }
+            }
+            
+            // Log para debug - mostrar todos os campos do primeiro ticket
+            if (filteredTickets.indexOf(ticket) === 0) {
+                console.log('=== DEBUG SOLICITANTE ===');
+                console.log('Todas as colunas disponíveis:', Object.keys(ticket));
+                console.log('Ticket completo:', ticket);
+                console.log('Solicitante selecionado:', requester);
+                console.log('========================');
+            }
 
             let targetSectionId = '';
             let statusClass = '';
