@@ -9,19 +9,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterButtons = document.querySelectorAll('.filter-btn');
     const toggleRotationBtn = document.getElementById('toggleRotation');
     const rotationIndicator = document.querySelector('.rotation-indicator');
-    const refreshButton = document.getElementById('refreshButton');
-    const toggleScrollBtn = document.getElementById('toggleScroll');
-    
-    // Esconder botão de auto-scroll no mobile
-    if (isMobile && toggleScrollBtn) {
-        toggleScrollBtn.style.display = 'none';
-    }
     
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1VMM-9zck6eBwCpd-WZ_PUbzSLI9sFGz2L309H7CJFlc/gviz/tq?tqx=out:csv&gid=330906161';
 
     const rotationOrder = ['abertos', 'andamento', 'resolvidos'];
     let currentIndex = 0;
-    const rotationIntervalTime = 15000; // 5 seconds
+    const rotationIntervalTime = 5000; // 5 seconds
     let rotationInterval;
     let isRotationActive = true;
     
@@ -68,38 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
             lastFetchTime = Date.now();
         }
     }, 120000); // 2 minutos
-
-    // Botão de refresh manual
-    refreshButton.addEventListener('click', () => {
-        console.log('Refresh manual acionado');
-        refreshButton.classList.add('refreshing');
-        
-        fetchTickets();
-        lastFetchTime = Date.now();
-        
-        // Remover classe de animação após 600ms
-        setTimeout(() => {
-            refreshButton.classList.remove('refreshing');
-        }, 600);
-    });
-
-    // Botão de toggle auto-scroll
-    toggleScrollBtn.addEventListener('click', () => {
-        if (isAutoScrolling) {
-            stopAutoScroll();
-            toggleScrollBtn.classList.remove('active');
-            toggleScrollBtn.title = 'Auto-scroll desativado';
-            showToast('Auto-scroll desativado');
-            console.log('Auto-scroll desativado');
-        } else {
-            scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
-            startAutoScroll();
-            toggleScrollBtn.classList.add('active');
-            toggleScrollBtn.title = 'Auto-scroll ativo';
-            showToast('Auto-scroll ativado');
-            console.log('Auto-scroll ativado');
-        }
-    });
 
     function fetchTickets() {
         console.log('Fetching tickets...');
@@ -765,7 +726,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 scrollPosition = 0;
                 window.scrollTo({ top: 0, behavior: 'smooth' });
-                if (isAutoScrolling && toggleScrollBtn.classList.contains('active')) {
+                if (isAutoScrolling) {
                     setTimeout(() => {
                         startAutoScroll();
                     }, 500);
