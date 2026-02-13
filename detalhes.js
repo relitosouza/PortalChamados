@@ -200,11 +200,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Criar timeline simples baseada no status
         createTimeline(statusLabel, timestamp);
-        
-        // Iniciar auto-scroll suave após carregar os detalhes
-        setTimeout(() => {
-            startAutoScrollDetails();
-        }, 1000);
     }
 
     function createTimeline(currentStatus, timestamp) {
@@ -297,75 +292,3 @@ function shareTicket() {
         });
     }
 }
-
-// Auto-scroll suave para a página de detalhes
-let detailsScrollInterval;
-let isDetailsScrolling = true;
-
-function startAutoScrollDetails() {
-    if (detailsScrollInterval) {
-        clearInterval(detailsScrollInterval);
-    }
-    
-    let scrollPosition = 0;
-    let direction = 'down';
-    let isPaused = false;
-    const SCROLL_SPEED = 0.8;
-    const PAUSE_TOP = 2000;
-    const PAUSE_BOTTOM = 3000;
-    
-    detailsScrollInterval = setInterval(() => {
-        if (!isDetailsScrolling || isPaused || document.hidden) return;
-        
-        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-        
-        if (maxScroll <= 0) return;
-        
-        if (direction === 'down') {
-            scrollPosition += SCROLL_SPEED;
-            
-            if (scrollPosition >= maxScroll) {
-                scrollPosition = maxScroll;
-                direction = 'up';
-                isPaused = true;
-                setTimeout(() => { isPaused = false; }, PAUSE_BOTTOM);
-            }
-        } else {
-            scrollPosition -= SCROLL_SPEED;
-            
-            if (scrollPosition <= 0) {
-                scrollPosition = 0;
-                direction = 'down';
-                isPaused = true;
-                setTimeout(() => { isPaused = false; }, PAUSE_TOP);
-            }
-        }
-        
-        window.scrollTo({
-            top: scrollPosition,
-            behavior: 'auto'
-        });
-    }, 16);
-}
-
-function stopAutoScrollDetails() {
-    isDetailsScrolling = false;
-    if (detailsScrollInterval) {
-        clearInterval(detailsScrollInterval);
-    }
-}
-
-// Pausar auto-scroll quando usuário interage
-let detailsUserTimeout;
-
-['mousedown', 'wheel', 'touchstart', 'keydown'].forEach(event => {
-    document.addEventListener(event, () => {
-        stopAutoScrollDetails();
-        
-        clearTimeout(detailsUserTimeout);
-        detailsUserTimeout = setTimeout(() => {
-            isDetailsScrolling = true;
-            startAutoScrollDetails();
-        }, 5000);
-    }, { passive: true });
-});

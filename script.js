@@ -14,21 +14,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const rotationOrder = ['abertos', 'andamento', 'resolvidos'];
     let currentIndex = 0;
-    const rotationIntervalTime = 15000; // 15 seconds
+    const rotationIntervalTime = 5000; // 5 seconds
     let rotationInterval;
     let isRotationActive = true;
     
     let allTickets = [];
     let currentFilter = 'all';
     let currentSearchTerm = '';
-    
-    // Auto-scroll configuration (apenas para desktop)
-    let autoScrollInterval;
-    let isAutoScrolling = false;
-    let scrollPosition = 0;
-    const SCROLL_SPEED = 2; // pixels por frame (aumentado para ser mais visível)
-    const SCROLL_PAUSE_TOP = 2000; // pausa no topo (ms)
-    const SCROLL_PAUSE_BOTTOM = 3000; // pausa no fundo (ms)
     
     // Swiper instances
     let swiperInstances = {};
@@ -95,11 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (!rotationInterval) {
                     startRotation();
-                }
-                
-                // Iniciar auto-scroll após carregar os dados (apenas desktop)
-                if (!isMobile) {
-                    startAutoScroll();
                 }
             })
             .catch(error => {
@@ -624,114 +611,4 @@ document.addEventListener('DOMContentLoaded', () => {
             toast.classList.remove('show');
         }, 3000);
     }
-
-    // Auto-scroll functions
-    function startAutoScroll() {
-        if (autoScrollInterval) {
-            clearInterval(autoScrollInterval);
-        }
-        
-        isAutoScrolling = true;
-        scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
-        let direction = 'down';
-        let isPaused = false;
-        
-        console.log('Auto-scroll iniciado. Posição inicial:', scrollPosition);
-        
-        autoScrollInterval = setInterval(() => {
-            if (!isAutoScrolling || isPaused || document.hidden) return;
-            
-            // Calcular altura máxima de scroll
-            const documentHeight = Math.max(
-                document.body.scrollHeight,
-                document.body.offsetHeight,
-                document.documentElement.clientHeight,
-                document.documentElement.scrollHeight,
-                document.documentElement.offsetHeight
-            );
-            const windowHeight = window.innerHeight;
-            const maxScroll = documentHeight - windowHeight;
-            
-            if (maxScroll <= 100) {
-                console.log('Conteúdo insuficiente para scroll. Max:', maxScroll);
-                return;
-            }
-            
-            if (direction === 'down') {
-                scrollPosition += SCROLL_SPEED;
-                
-                if (scrollPosition >= maxScroll) {
-                    scrollPosition = maxScroll;
-                    direction = 'up';
-                    isPaused = true;
-                    console.log('Chegou ao fundo, pausando...');
-                    
-                    // Pausa no fundo
-                    setTimeout(() => {
-                        isPaused = false;
-                        console.log('Retomando scroll para cima');
-                    }, SCROLL_PAUSE_BOTTOM);
-                }
-            } else {
-                scrollPosition -= SCROLL_SPEED;
-                
-                if (scrollPosition <= 0) {
-                    scrollPosition = 0;
-                    direction = 'down';
-                    isPaused = true;
-                    console.log('Chegou ao topo, pausando...');
-                    
-                    // Pausa no topo
-                    setTimeout(() => {
-                        isPaused = false;
-                        console.log('Retomando scroll para baixo');
-                    }, SCROLL_PAUSE_TOP);
-                }
-            }
-            
-            window.scrollTo(0, scrollPosition);
-        }, 16); // ~60fps
-    }
-    
-    function stopAutoScroll() {
-        isAutoScrolling = false;
-        if (autoScrollInterval) {
-            clearInterval(autoScrollInterval);
-        }
-    }
-    
-    // Pausar auto-scroll quando usuário interage
-    let userInteractionTimeout;
-    
-    ['mousedown', 'wheel', 'touchstart', 'keydown'].forEach(event => {
-        document.addEventListener(event, () => {
-            if (isAutoScrolling) {
-                stopAutoScroll();
-                
-                // Retomar após 5 segundos de inatividade
-                clearTimeout(userInteractionTimeout);
-                userInteractionTimeout = setTimeout(() => {
-                    // Resetar posição para posição atual da janela
-                    scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
-                    startAutoScroll();
-                }, 5000);
-            }
-        }, { passive: true });
-    });
-    
-    // Pausar auto-scroll quando muda de aba
-    navLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
-            // Reset scroll position ao mudar de aba
-            setTimeout(() => {
-                scrollPosition = 0;
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                if (isAutoScrolling) {
-                    setTimeout(() => {
-                        startAutoScroll();
-                    }, 500);
-                }
-            }, 100);
-        });
-    });
 });
