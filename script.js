@@ -4,385 +4,157 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchInput');
     const clearSearchBtn = document.getElementById('clearSearch');
     const filterButtons = document.querySelectorAll('.filter-btn');
-    const toggleRotationBtn = document.getElementById('toggleRotation');
-    const rotationIndicator = document.querySelector('.rotation-indicator');
     const refreshButton = document.getElementById('refreshButton');
     const toggleScrollBtn = document.getElementById('toggleScroll');
     
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1VMM-9zck6eBwCpd-WZ_PUbzSLI9sFGz2L309H7CJFlc/gviz/tq?tqx=out:csv&gid=330906161';
-
-    const rotationOrder = ['abertos', 'andamento', 'resolvidos'];
-    let currentIndex = 0;
-    const rotationIntervalTime = 20000; 
-    let rotationInterval;
-    let isRotationActive = true;
     
     let allTickets = [];
     let currentFilter = 'all';
     let currentSearchTerm = '';
-    
-    let autoScrollInterval;
-    let isAutoScrolling = false;
-    let scrollPosition = 0;
-    const SCROLL_SPEED = 2; 
-    const SCROLL_PAUSE_TOP = 2000; 
-    const SCROLL_PAUSE_BOTTOM = 3000; 
+    let swiperInstances = {};
 
-    // Função para verificar se é Mobile
     const isMobile = () => window.innerWidth <= 768;
 
-    fetchTickets();
+    // --- AUTO SCROLL CONFIG ---
+    let autoScrollInterval, isAutoScrolling = false, scrollPosition = 0;
+    const SCROLL_SPEED = 1, SCROLL_PAUSE = 3000;
 
-    let lastFetchTime = Date.now();
-    const AUTO_REFRESH_INTERVAL = 10000; 
+    function initSwipers() {
+        // Destruir instâncias anteriores
+        Object.values(swiperInstances).forEach(s => s.destroy && s.destroy());
 
-    document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) {
-            const timeSinceLastFetch = Date.now() - lastFetchTime;
-            if (timeSinceLastFetch > AUTO_REFRESH_INTERVAL) {
-                fetchTickets();
-                lastFetchTime = Date.now();
+        const swiperOptions = {
+            slidesPerView: 1,
+            spaceBetween: 20,
+            pagination: { el: '.swiper-pagination', clickable: true },
+            navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+            breakpoints: {
+                768: { slidesPerView: 2 },
+                1200: { slidesPerView: 3 }
             }
-        }
-    });
+        };
 
-    setInterval(() => {
-        if (!document.hidden) {
-            fetchTickets();
-            lastFetchTime = Date.now();
-        }
-    }, 120000); 
-
-    refreshButton.addEventListener('click', () => {
-        refreshButton.classList.add('refreshing');
-        fetchTickets();
-        lastFetchTime = Date.now();
-        setTimeout(() => {
-            refreshButton.classList.remove('refreshing');
-        }, 600);
-    });
-
-    toggleScrollBtn.addEventListener('click', () => {
-        if (isAutoScrolling) {
-            stopAutoScroll();
-            toggleScrollBtn.classList.remove('active');
-            showToast('Auto-scroll desativado');
-        } else {
-            if (isMobile()) {
-                showToast('Auto-scroll não recomendado em celulares');
-                return;
-            }
-            scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
-            startAutoScroll();
-            toggleScrollBtn.classList.add('active');
-            showToast('Auto-scroll ativado');
-        }
-    });
+        swiperInstances.abertos = new Swiper('.abertos-swiper', swiperOptions);
+        swiperInstances.andamento = new Swiper('.andamento-swiper', swiperOptions);
+        swiperInstances.resolvidos = new Swiper('.resolvidos-swiper', swiperOptions);
+    }
 
     function fetchTickets() {
         fetch(SHEET_URL)
-            .then(response => {
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                return response.text();
-            })
+            .then(res => res.text())
             .then(csvText => {
-                const tickets = parseCSV(csvText);
-                allTickets = tickets;
-                renderTickets(tickets);
-                updateCounts();
-                if (lastFetchTime > 0) showToast('Chamados atualizados!');
-                if (!rotationInterval) startRotation();
-                
-                // Inicia auto-scroll apenas se não for mobile
-                if (!isMobile()) {
-                    startAutoScroll();
-                    toggleScrollBtn.classList.add('active');
-                } else {
-                    toggleScrollBtn.classList.remove('active');
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching tickets:', error);
-                showError(error.message);
+                allTickets = parseCSV(csvText);
+                renderTickets(allTickets);
+                if (!isMobile() && isAutoScrolling) startAutoScroll();
             });
     }
 
     function parseCSV(csvText) {
-        const rows = [];
-        let currentRow = [];
-        let currentVal = '';
-        let inQuotes = false;
-        const text = csvText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-
-        for (let i = 0; i < text.length; i++) {
-            const char = text[i];
-            const nextChar = text[i + 1];
-            if (char === '"') {
-                if (inQuotes && nextChar === '"') { currentVal += '"'; i++; } 
-                else { inQuotes = !inQuotes; }
-            } else if (char === ',' && !inQuotes) {
-                currentRow.push(currentVal);
-                currentVal = '';
-            } else if (char === '\n' && !inQuotes) {
-                currentRow.push(currentVal);
-                if (currentRow.length > 0) rows.push(currentRow);
-                currentRow = [];
-                currentVal = '';
-            } else {
-                currentVal += char;
-            }
-        }
-        if (currentVal || currentRow.length > 0) {
-            currentRow.push(currentVal);
-            rows.push(currentRow);
-        }
-        if (rows.length === 0) return [];
-        const headers = rows[0].map(h => h.trim());
-        return rows.slice(1).map(values => {
-            const ticket = {};
-            headers.forEach((header, index) => {
-                const val = values[index] !== undefined ? values[index] : '';
-                ticket[header] = val.trim();
-            });
-            ticket._rawKeys = headers; 
-            return ticket;
+        const rows = csvText.split('\n').map(row => row.split(',').map(cell => cell.replace(/"/g, '').trim()));
+        const headers = rows[0];
+        return rows.slice(1).map(row => {
+            let obj = {};
+            headers.forEach((h, i) => obj[h] = row[i]);
+            obj._rawHeaders = headers; 
+            return obj;
         });
     }
 
-    function getPersonName(ticket) {
-        // Busca na Coluna G (índice 6)
-        const colGName = ticket._rawKeys ? ticket._rawKeys[6] : null;
-        return ticket[colGName] || ticket['Nome'] || ticket['Solicitante'] || 'Não informado';
+    function getPerson(ticket) {
+        // Coluna G é índice 6
+        const headerG = ticket._rawHeaders ? ticket._rawHeaders[6] : null;
+        return ticket[headerG] || ticket['Solicitante'] || 'Não Informado';
     }
 
     function renderTickets(tickets) {
-        document.querySelector('#abertos .cards-container').innerHTML = '';
-        document.querySelector('#andamento .cards-container').innerHTML = '';
-        document.querySelector('#resolvidos .cards-container').innerHTML = '';
+        // Limpar containers
+        document.querySelectorAll('.cards-container').forEach(c => c.innerHTML = '');
 
-        const filteredTickets = filterTickets(tickets);
+        const filtered = tickets.filter(t => {
+            const person = getPerson(t).toLowerCase();
+            const title = (t['Titulo'] || '').toLowerCase();
+            const search = currentSearchTerm.toLowerCase();
+            const sys = (t['Sistema'] || '').toLowerCase();
 
-        filteredTickets.forEach(ticket => {
-            const id = ticket['Numero do Chamado'];
-            const title = ticket['Titulo'];
-            const rawDescription = (ticket['Assunto'] || '').trim();
-            const person = getPersonName(ticket);
-            const statusRaw = ticket['Status'] ? ticket['Status'].toLowerCase() : '';
-            const timestamp = ticket['Carimbo de data/hora'];
-            const system = ticket['Sistema'] ? ticket['Sistema'].trim() : '';
-
-            // Lógica rigorosa de 12 palavras
-            const words = rawDescription.split(/\s+/).filter(w => w.length > 0);
-            const truncatedDescription = words.length > 12 ? words.slice(0, 12).join(' ') + '...' : rawDescription;
-
-            let targetSectionId = '';
-            let statusClass = '';
-            let statusLabel = '';
-
-            if (statusRaw.includes('aberto')) {
-                targetSectionId = 'abertos';
-                statusClass = 'status-aberto';
-                statusLabel = 'Aberto';
-            } else if (statusRaw.includes('andamento')) {
-                targetSectionId = 'andamento';
-                statusClass = 'status-andamento';
-                statusLabel = 'Em Andamento';
-            } else if (statusRaw.includes('resolvido')) {
-                targetSectionId = 'resolvidos';
-                statusClass = 'status-resolvido';
-                statusLabel = 'Resolvido';
-            } else { return; }
-
-            let systemClass = '';
-            const systemNormalized = system.toLowerCase();
-            if (systemNormalized.includes('cp')) systemClass = 'system-cp';
-            else if (systemNormalized.includes('am')) systemClass = 'system-am';
-            else if (systemNormalized.includes('transpar')) systemClass = 'system-transparencia';
-
-            const card = document.createElement('div');
-            card.className = `card ${statusClass} visible`;
-            
-            card.innerHTML = `
-                <div class="card-header">
-                    <span class="ticket-id">#${id}</span>
-                    <span class="status-badge">${statusLabel}</span>
-                    ${system ? `<span class="system-badge ${systemClass}">${system}</span>` : ''}
-                </div>
-                <h3>${title}</h3>
-                <div class="card-requester">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                    <span>${person}</span>
-                </div>
-                <p class="ticket-desc">${truncatedDescription}</p>
-                <div class="card-footer">
-                    <span>${timestamp || ''}</span>
-                    <a href="detalhes.html?id=${encodeURIComponent(id)}" class="btn-details">Ver Detalhes</a>
-                </div>
-            `;
-
-            const container = document.querySelector(`#${targetSectionId} .cards-container`);
-            if (container) container.appendChild(card);
+            const sysMatch = currentFilter === 'all' || sys.includes(currentFilter);
+            const searchMatch = !search || title.includes(search) || person.includes(search);
+            return sysMatch && searchMatch;
         });
-        updateNoResultsMessage();
-    }
 
-    function filterTickets(tickets) {
-        return tickets.filter(ticket => {
-            const system = ticket['Sistema'] ? ticket['Sistema'].toLowerCase().trim() : '';
-            const title = ticket['Titulo'] ? ticket['Titulo'].toLowerCase() : '';
-            const description = ticket['Assunto'] ? ticket['Assunto'].toLowerCase() : '';
-            const person = getPersonName(ticket).toLowerCase();
-            const id = ticket['Numero do Chamado'] ? ticket['Numero do Chamado'].toString() : '';
+        filtered.forEach(t => {
+            const status = (t['Status'] || '').toLowerCase();
+            const person = getPerson(t);
+            const descRaw = (t['Assunto'] || '').trim();
+            const words = descRaw.split(/\s+/).filter(w => w.length > 0);
+            const truncated = words.length > 12 ? words.slice(0, 12).join(' ') + '...' : descRaw;
 
-            let systemMatch = (currentFilter === 'all') || 
-                             (currentFilter === 'cp' && system.includes('cp')) ||
-                             (currentFilter === 'am' && system.includes('am')) ||
-                             (currentFilter === 'transparencia' && system.includes('transpar'));
+            let target = '';
+            if (status.includes('aberto')) target = 'abertos';
+            else if (status.includes('andamento')) target = 'andamento';
+            else if (status.includes('resolvido')) target = 'resolvidos';
 
-            const searchMatch = !currentSearchTerm || 
-                title.includes(currentSearchTerm) ||
-                description.includes(currentSearchTerm) ||
-                person.includes(currentSearchTerm) || 
-                id.includes(currentSearchTerm);
-
-            return systemMatch && searchMatch;
-        });
-    }
-
-    function updateCounts() {
-        const counts = { abertos: 0, andamento: 0, resolvidos: 0 };
-        const filteredTickets = filterTickets(allTickets);
-        filteredTickets.forEach(ticket => {
-            const statusRaw = ticket['Status'] ? ticket['Status'].toLowerCase() : '';
-            if (statusRaw.includes('aberto')) counts.abertos++;
-            else if (statusRaw.includes('andamento')) counts.andamento++;
-            else if (statusRaw.includes('resolvido')) counts.resolvidos++;
-        });
-        document.querySelectorAll('.badge-count').forEach(badge => {
-            badge.textContent = counts[badge.dataset.section] || 0;
-        });
-    }
-
-    function updateNoResultsMessage() {
-        sections.forEach(section => {
-            const container = section.querySelector('.cards-container');
-            const noResults = section.querySelector('.no-results');
-            const hasCards = container ? container.querySelectorAll('.card').length > 0 : false;
-            if (noResults) noResults.style.display = hasCards ? 'none' : 'block';
-        });
-    }
-
-    function showError(message) {
-        document.querySelectorAll('.cards-container').forEach(container => {
-            container.innerHTML = `<div class="error-message">Erro: ${message}</div>`;
-        });
-    }
-
-    function switchTab(targetId) {
-        navLinks.forEach(nav => nav.classList.remove('active'));
-        sections.forEach(section => section.classList.remove('active'));
-        const activeLink = document.querySelector(`nav a[data-target="${targetId}"]`);
-        if (activeLink) activeLink.classList.add('active');
-        const targetSection = document.getElementById(targetId);
-        if (targetSection) targetSection.classList.add('active');
-    }
-
-    searchInput.addEventListener('input', (e) => {
-        currentSearchTerm = e.target.value.toLowerCase().trim();
-        renderTickets(allTickets);
-        updateCounts();
-    });
-
-    clearSearchBtn.addEventListener('click', () => {
-        searchInput.value = '';
-        currentSearchTerm = '';
-        renderTickets(allTickets);
-        updateCounts();
-    });
-
-    filterButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            filterButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentFilter = btn.dataset.filter;
-            renderTickets(allTickets);
-            updateCounts();
-        });
-    });
-
-    toggleRotationBtn.addEventListener('click', () => {
-        isRotationActive = !isRotationActive;
-        if (isRotationActive) {
-            rotationIndicator.classList.remove('paused');
-            startRotation();
-        } else {
-            rotationIndicator.classList.add('paused');
-            if (rotationInterval) clearInterval(rotationInterval);
-        }
-    });
-
-    navLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const targetId = link.getAttribute('data-target');
-            currentIndex = rotationOrder.indexOf(targetId);
-            switchTab(targetId);
-            if (isRotationActive) {
-                if (rotationInterval) clearInterval(rotationInterval);
-                rotationInterval = setInterval(rotateView, rotationIntervalTime);
+            if (target) {
+                const slide = document.createElement('div');
+                slide.className = 'swiper-slide';
+                slide.innerHTML = `
+                    <div class="card status-${target}">
+                        <div class="card-header">
+                            <span class="ticket-id">#${t['Numero do Chamado']}</span>
+                            <span class="system-badge">${t['Sistema'] || ''}</span>
+                        </div>
+                        <h3>${t['Titulo']}</h3>
+                        <div class="card-requester">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <span>${person}</span>
+                        </div>
+                        <p class="ticket-desc">${truncated}</p>
+                        <div class="card-footer">
+                            <a href="detalhes.html?id=${t['Numero do Chamado']}" class="btn-details">Ver Detalhes</a>
+                        </div>
+                    </div>
+                `;
+                document.querySelector(`#${target} .cards-container`).appendChild(slide);
             }
         });
+
+        setTimeout(initSwipers, 100);
+        updateCounts(filtered);
+    }
+
+    function updateCounts(tickets) {
+        const counts = { abertos: 0, andamento: 0, resolvidos: 0 };
+        tickets.forEach(t => {
+            const s = (t['Status'] || '').toLowerCase();
+            if (s.includes('aberto')) counts.abertos++;
+            else if (s.includes('andamento')) counts.andamento++;
+            else if (s.includes('resolvido')) counts.resolvidos++;
+        });
+        document.querySelectorAll('.badge-count').forEach(b => b.textContent = counts[b.dataset.section]);
+    }
+
+    // --- EVENTOS ---
+    searchInput.addEventListener('input', (e) => {
+        currentSearchTerm = e.target.value;
+        renderTickets(allTickets);
     });
 
-    function rotateView() {
-        if (!isRotationActive) return;
-        currentIndex = (currentIndex + 1) % rotationOrder.length;
-        switchTab(rotationOrder[currentIndex]);
-    }
-
-    function startRotation() {
-        if (!isRotationActive) return;
-        if (rotationInterval) clearInterval(rotationInterval);
-        rotationInterval = setInterval(rotateView, rotationIntervalTime);
-    }
-
-    function showToast(message) {
-        const toast = document.getElementById('toast');
-        const msgEl = document.getElementById('toastMessage');
-        if (msgEl) msgEl.textContent = message;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 3000);
-    }
+    toggleScrollBtn.addEventListener('click', () => {
+        if (isMobile()) return alert("Auto-scroll desativado para mobile.");
+        isAutoScrolling = !isAutoScrolling;
+        toggleScrollBtn.classList.toggle('active', isAutoScrolling);
+        isAutoScrolling ? startAutoScroll() : clearInterval(autoScrollInterval);
+    });
 
     function startAutoScroll() {
-        if (isMobile()) return; // Trava de segurança para mobile
-        if (autoScrollInterval) clearInterval(autoScrollInterval);
-        isAutoScrolling = true;
-        let direction = 'down';
-        let isPaused = false;
+        clearInterval(autoScrollInterval);
         autoScrollInterval = setInterval(() => {
-            if (!isAutoScrolling || isPaused || document.hidden) return;
-            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-            if (maxScroll <= 50) return;
-            if (direction === 'down') {
-                scrollPosition += SCROLL_SPEED;
-                if (scrollPosition >= maxScroll) {
-                    scrollPosition = maxScroll; direction = 'up'; isPaused = true;
-                    setTimeout(() => isPaused = false, SCROLL_PAUSE_BOTTOM);
-                }
-            } else {
-                scrollPosition -= SCROLL_SPEED;
-                if (scrollPosition <= 0) {
-                    scrollPosition = 0; direction = 'down'; isPaused = true;
-                    setTimeout(() => isPaused = false, SCROLL_PAUSE_TOP);
-                }
-            }
+            const max = document.documentElement.scrollHeight - window.innerHeight;
+            scrollPosition = (window.scrollY >= max) ? 0 : window.scrollY + SCROLL_SPEED;
             window.scrollTo(0, scrollPosition);
-        }, 16);
+        }, 30);
     }
-    
-    function stopAutoScroll() {
-        isAutoScrolling = false;
-        if (autoScrollInterval) clearInterval(autoScrollInterval);
-    }
+
+    fetchTickets();
+    setInterval(fetchTickets, 60000); // Atualiza a cada 1 min
 });
