@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Detectar se é dispositivo móvel (PRIMEIRO)
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    
     const navLinks = document.querySelectorAll('nav a');
     const sections = document.querySelectorAll('section');
     const searchInput = document.getElementById('searchInput');
@@ -25,9 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let allTickets = [];
     let currentFilter = 'all';
     let currentSearchTerm = '';
-    
-    // Detectar se é dispositivo móvel
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
     
     // Auto-scroll configuration (apenas para desktop)
     let autoScrollInterval;
@@ -103,21 +103,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function fetchTickets() {
         console.log('Fetching tickets...');
+        console.log('isMobile:', isMobile);
+        console.log('SHEET_URL:', SHEET_URL);
 
         fetch(SHEET_URL)
             .then(response => {
+                console.log('Response status:', response.status);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 return response.text();
             })
             .then(csvText => {
+                console.log('CSV received, length:', csvText.length);
                 if (csvText.includes('<!DOCTYPE html>') || csvText.includes('<html')) {
                     throw new Error('Received HTML instead of CSV. Check sheet permissions.');
                 }
 
                 const tickets = parseCSV(csvText);
-                console.log('Parsed tickets:', tickets);
+                console.log('Parsed tickets:', tickets.length, 'tickets');
+                console.log('First ticket:', tickets[0]);
                 allTickets = tickets;
                 renderTickets(tickets);
                 updateCounts();
@@ -197,12 +202,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderTickets(tickets) {
+        console.log('renderTickets called with', tickets.length, 'tickets');
+        
         // Clear all containers
         document.querySelector('#abertos .cards-container').innerHTML = '';
         document.querySelector('#andamento .cards-container').innerHTML = '';
         document.querySelector('#resolvidos .cards-container').innerHTML = '';
 
         const filteredTickets = filterTickets(tickets);
+        console.log('Filtered tickets:', filteredTickets.length);
 
         filteredTickets.forEach(ticket => {
             const id = ticket['Numero do Chamado'];
@@ -281,15 +289,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const container = document.querySelector(`#${targetSectionId} .cards-container`);
             if (container) {
                 container.appendChild(card);
+            } else {
+                console.error('Container not found for section:', targetSectionId);
             }
         });
+
+        console.log('Cards renderizados. Verificando conversão para Swiper...');
+        console.log('Total de cards em #abertos:', document.querySelectorAll('#abertos .card').length);
+        console.log('Total de cards em #andamento:', document.querySelectorAll('#andamento .card').length);
+        console.log('Total de cards em #resolvidos:', document.querySelectorAll('#resolvidos .card').length);
 
         // Show "no results" message if needed
         updateNoResultsMessage();
         
         // Converter para Swiper apenas no desktop
         if (!isMobile) {
+            console.log('Desktop detectado - convertendo para Swiper...');
             convertToSwiper();
+        } else {
+            console.log('Mobile detectado - mantendo grid normal');
         }
     }
 
