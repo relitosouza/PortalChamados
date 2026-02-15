@@ -422,8 +422,40 @@
 
     <script>
         // CONFIGURAÇÃO - SUBSTITUA PELA URL DO SEU APPS SCRIPT
+        // ⚠️ IMPORTANTE: Configure a URL da sua API aqui!
+        // Para obter a URL:
+        // 1. Vá no Apps Script
+        // 2. Clique em "Implantar" > "Nova implantação"
+        // 3. Tipo: "Aplicativo da Web"
+        // 4. Acesso: "Qualquer pessoa"
+        // 5. Copie a URL e cole abaixo
         const API_URL = 'https://script.google.com/macros/s/AKfycbwQF2Wo9DquQbr4pf5k7AjY0giqWB1wM6lkSam5Xju3JUAuOnhEqLI_Q5siRXSYKXCg/exec';
+        
+        // Validar se a API_URL foi configurada
+        if (API_URL === 'https://script.google.com/macros/s/AKfycbwQF2Wo9DquQbr4pf5k7AjY0giqWB1wM6lkSam5Xju3JUAuOnhEqLI_Q5siRXSYKXCg/exec') {
+            document.addEventListener('DOMContentLoaded', function() {
+                document.body.innerHTML = `
+                    <div style="max-width: 800px; margin: 100px auto; padding: 40px; background: #fee2e2; border: 3px solid #dc2626; border-radius: 16px; text-align: center;">
+                        <h1 style="color: #dc2626; margin-bottom: 20px;">⚠️ Configuração Necessária</h1>
+                        <p style="font-size: 18px; margin-bottom: 20px;">A API_URL não foi configurada!</p>
+                        <div style="background: white; padding: 20px; border-radius: 12px; text-align: left; margin: 20px 0;">
+                            <h3 style="margin-bottom: 15px;">📋 Como configurar:</h3>
+                            <ol style="line-height: 2; padding-left: 20px;">
+                                <li>Abra o Apps Script do Google</li>
+                                <li>Clique em <strong>"Implantar"</strong> > <strong>"Nova implantação"</strong></li>
+                                <li>Tipo: <strong>"Aplicativo da Web"</strong></li>
+                                <li>Quem tem acesso: <strong>"Qualquer pessoa"</strong></li>
+                                <li>Copie a URL gerada</li>
+                                <li>Cole a URL na linha 430 deste arquivo HTML</li>
+                            </ol>
+                        </div>
+                        <p style="color: #991b1b; font-weight: bold;">Edite o arquivo admin.html e configure a API_URL!</p>
+                    </div>
+                `;
+            });
+        }
         const USER_EMAIL = 'ricardo.elito@gmail.com'; // Substitua pelo seu email
+
         let chamadoAtual = null;
         let statusSelecionado = null;
         let dadosChamado = null;
@@ -589,26 +621,56 @@
         }
 
         async function carregarHistorico(chamadoId) {
+            const historicoDiv = document.getElementById('historico');
+            historicoDiv.innerHTML = '<div class="alert alert-info">Carregando histórico...</div>';
+            
             try {
+                console.log('Buscando histórico para:', chamadoId);
+                console.log('API URL:', API_URL);
+                
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
                         action: 'obterHistorico',
                         chamadoId: chamadoId
                     })
                 });
 
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const result = await response.json();
+                console.log('Resultado do histórico:', result);
 
-                if (result.success && result.data.length > 0) {
-                    renderizarHistorico(result.data);
+                if (result.success) {
+                    if (result.data && result.data.length > 0) {
+                        renderizarHistorico(result.data);
+                    } else {
+                        historicoDiv.innerHTML = '<div class="alert alert-info">📋 Nenhum histórico encontrado para este chamado</div>';
+                    }
                 } else {
-                    document.getElementById('historico').innerHTML = '<div class="alert alert-info">Nenhum histórico encontrado</div>';
+                    throw new Error(result.message || 'Erro ao buscar histórico');
                 }
             } catch (error) {
                 console.error('Erro ao carregar histórico:', error);
-                document.getElementById('historico').innerHTML = '<div class="alert alert-error">Erro ao carregar histórico</div>';
+                historicoDiv.innerHTML = `
+                    <div class="alert alert-error">
+                        <strong>❌ Erro ao carregar histórico</strong><br>
+                        ${error.message}<br><br>
+                        <small>Verifique se:</small>
+                        <ul style="margin-top: 8px; padding-left: 20px;">
+                            <li>A API_URL está configurada corretamente</li>
+                            <li>O script está implantado e acessível</li>
+                            <li>O chamado existe na planilha</li>
+                        </ul>
+                    </div>
+                `;
             }
         }
 
