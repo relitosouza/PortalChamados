@@ -172,9 +172,9 @@ header h1 {
 }
 
 /* ===== MAIN ===== */
-main {
+main.container {
     flex: 1;
-    padding: 36px 24px;
+    padding: 48px 24px;
 }
 
 /* ===== LOADING STATE ===== */
@@ -691,8 +691,8 @@ footer p {
         justify-content: center;
     }
 
-    main {
-        padding: 24px 16px;
+    main.container {
+        padding: 32px 16px;
     }
 }
 
