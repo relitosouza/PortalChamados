@@ -5,9 +5,9 @@
 
 // --- Configuração central ---
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1VMM-9zck6eBwCpd-WZ_PUbzSLI9sFGz2L309H7CJFlc/gviz/tq?tqx=out:csv&gid=330906161';
-const API_URL   = 'https://script.google.com/macros/s/AKfycbwQF2Wo9DquQbr4pf5k7AjY0giqWB1wM6lkSam5Xju3JUAuOnhEqLI_Q5siRXSYKXCg/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwQF2Wo9DquQbr4pf5k7AjY0giqWB1wM6lkSam5Xju3JUAuOnhEqLI_Q5siRXSYKXCg/exec';
 const ADMIN_CONFIG = {
-    userEmail: 'seu.email@exemplo.com' // Substitua pelo email do administrador
+    userEmail: 'ricardo.elito@gmail.com' // Substitua pelo email do administrador
 };
 
 // --- parseCSV ---

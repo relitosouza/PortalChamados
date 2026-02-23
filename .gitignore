@@ -1,6 +1,6 @@
-# Claude Code agent cache
+# Agent/IDE configs
 .agent/
 .claude/
 
-# Git subfolder (empty nested repo)
-PortalChamados/
+# Docs/plans gerados automaticamente
+docs/
