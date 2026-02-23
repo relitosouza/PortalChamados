@@ -1,6 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1VMM-9zck6eBwCpd-WZ_PUbzSLI9sFGz2L309H7CJFlc/gviz/tq?tqx=out:csv&gid=330906161';
-    
     // Pegar o ID do chamado da URL
     const urlParams = new URLSearchParams(window.location.search);
     const ticketId = urlParams.get('id');
@@ -14,8 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchTicketDetails(ticketId);
 
     function fetchTicketDetails(id) {
-        console.log('Buscando chamado:', id);
-
         fetch(SHEET_URL)
             .then(response => {
                 if (!response.ok) {
@@ -41,60 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('Error fetching ticket:', error);
                 showError();
             });
-    }
-
-    function parseCSV(csvText) {
-        const rows = [];
-        let currentRow = [];
-        let currentVal = '';
-        let inQuotes = false;
-
-        const text = csvText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-
-        for (let i = 0; i < text.length; i++) {
-            const char = text[i];
-            const nextChar = text[i + 1];
-
-            if (char === '"') {
-                if (inQuotes && nextChar === '"') {
-                    currentVal += '"';
-                    i++;
-                } else {
-                    inQuotes = !inQuotes;
-                }
-            } else if (char === ',' && !inQuotes) {
-                currentRow.push(currentVal);
-                currentVal = '';
-            } else if (char === '\n' && !inQuotes) {
-                currentRow.push(currentVal);
-                if (currentRow.length > 0) {
-                    rows.push(currentRow);
-                }
-                currentRow = [];
-                currentVal = '';
-            } else {
-                currentVal += char;
-            }
-        }
-
-        if (currentVal || currentRow.length > 0) {
-            currentRow.push(currentVal);
-            rows.push(currentRow);
-        }
-
-        if (rows.length === 0) return [];
-
-        const headers = rows[0].map(h => h.trim());
-        const data = rows.slice(1).map(values => {
-            const ticket = {};
-            headers.forEach((header, index) => {
-                const val = values[index] !== undefined ? values[index] : '';
-                ticket[header] = val.trim();
-            });
-            return ticket;
-        });
-
-        return data;
     }
 
     function displayTicket(ticket) {
@@ -184,8 +126,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const item = document.createElement('div');
                 item.className = 'info-item';
                 item.innerHTML = `
-                    <label>${key}</label>
-                    <span>${ticket[key]}</span>
+                    <label>${escapeHTML(key)}</label>
+                    <span>${escapeHTML(ticket[key])}</span>
                 `;
                 additionalFields.appendChild(item);
             }
@@ -268,7 +210,7 @@ function shareTicket() {
             title: `${id} - ${title}`,
             text: `Confira os detalhes deste chamado: ${title}`,
             url: url
-        }).catch(err => console.log('Erro ao compartilhar:', err));
+        }).catch(err => console.error('Erro ao compartilhar:', err));
     } else {
         // Fallback: copiar para clipboard
         navigator.clipboard.writeText(url).then(() => {

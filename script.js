@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Detectar se é dispositivo móvel (PRIMEIRO)
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
-    
+
     const navLinks = document.querySelectorAll('nav a');
     const sections = document.querySelectorAll('section');
     const searchInput = document.getElementById('searchInput');
@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterButtons = document.querySelectorAll('.filter-btn');
     const toggleRotationBtn = document.getElementById('toggleRotation');
     const rotationIndicator = document.querySelector('.rotation-indicator');
-    
+
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1VMM-9zck6eBwCpd-WZ_PUbzSLI9sFGz2L309H7CJFlc/gviz/tq?tqx=out:csv&gid=330906161';
 
     const rotationOrder = ['abertos', 'andamento', 'resolvidos'];
@@ -17,11 +17,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const rotationIntervalTime = 20000; // 5 seconds
     let rotationInterval;
     let isRotationActive = true;
-    
+
     let allTickets = [];
     let currentFilter = 'all';
     let currentSearchTerm = '';
-    
+
     // Swiper instances
     let swiperInstances = {};
 
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!document.hidden) {
             // Página voltou ao foco
             const timeSinceLastFetch = Date.now() - lastFetchTime;
-            
+
             if (timeSinceLastFetch > AUTO_REFRESH_INTERVAL) {
                 console.log('Página voltou ao foco - atualizando chamados...');
                 fetchTickets();
@@ -79,12 +79,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 allTickets = tickets;
                 renderTickets(tickets);
                 updateCounts();
-                
+
                 // Mostrar toast apenas se não for o primeiro carregamento
                 if (lastFetchTime > 0) {
                     showToast('Chamados atualizados!');
                 }
-                
+
                 if (!rotationInterval) {
                     startRotation();
                 }
@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderTickets(tickets) {
         console.log('renderTickets called with', tickets.length, 'tickets');
-        
+
         // Clear all containers
         document.querySelector('#abertos .cards-container').innerHTML = '';
         document.querySelector('#andamento .cards-container').innerHTML = '';
@@ -167,12 +167,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const statusRaw = ticket['Status'] ? ticket['Status'].toLowerCase() : '';
             const timestamp = ticket['Carimbo de data/hora'];
             const system = ticket['Sistema'] ? ticket['Sistema'].trim() : '';
-            
+
             // Tentar pegar solicitante de várias formas possíveis
             // Testa variações comuns do nome da coluna
             const possibleRequesterKeys = [
                 'Solicitante',
-                'solicitante', 
+                'solicitante',
                 'SOLICITANTE',
                 'Nome do Solicitante',
                 'Nome Solicitante',
@@ -182,9 +182,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 'Usuario',
                 'Nome'
             ];
-            
+
             let requester = 'Não informado';
-            
+
             // Procura a primeira coluna que existe e tem valor
             for (const key of possibleRequesterKeys) {
                 if (ticket[key] && ticket[key].trim()) {
@@ -192,13 +192,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
                 }
             }
-            
+
             // Se ainda não encontrou, tenta buscar por coluna que contenha "solicit" ou "nome"
             if (requester === 'Não informado') {
                 const keys = Object.keys(ticket);
                 for (const key of keys) {
                     const lowerKey = key.toLowerCase();
-                    if ((lowerKey.includes('solicit') || lowerKey.includes('nome') || lowerKey.includes('criado') || lowerKey.includes('usuario') || lowerKey.includes('usuário')) 
+                    if ((lowerKey.includes('solicit') || lowerKey.includes('nome') || lowerKey.includes('criado') || lowerKey.includes('usuario') || lowerKey.includes('usuário'))
                         && ticket[key] && ticket[key].trim() && ticket[key].trim() !== '') {
                         requester = ticket[key].trim();
                         console.log(`Campo solicitante encontrado na coluna: "${key}" = "${requester}"`);
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-            
+
             // Log para debug - mostrar todos os campos do primeiro ticket
             if (filteredTickets.indexOf(ticket) === 0) {
                 console.log('=== DEBUG SOLICITANTE ===');
@@ -232,6 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 targetSectionId = 'resolvidos';
                 statusClass = 'status-resolvido';
                 statusLabel = 'Resolvido';
+
             } else {
                 return;
             }
@@ -242,11 +243,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 .replace(/\s+/g, ' ')            // Substitui múltiplos espaços por um único
                 .split(' ')                       // Divide em palavras
                 .filter(word => word.length > 0); // Remove strings vazias
-            
-            const truncatedDescription = words.length > 12 
-                ? words.slice(0, 12).join(' ') + '...' 
+
+            const truncatedDescription = words.length > 12
+                ? words.slice(0, 12).join(' ') + '...'
                 : description.trim();
-            
+
             // Debug: log se descrição foi truncada
             if (words.length > 12) {
                 console.log(`Descrição truncada: ${words.length} palavras -> 12 palavras (ID: ${id})`);
@@ -308,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Show "no results" message if needed
         updateNoResultsMessage();
-        
+
         // Converter para Swiper apenas no desktop
         if (!isMobile) {
             console.log('Desktop detectado - convertendo para Swiper...');
@@ -324,24 +325,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const section = document.getElementById(sectionId);
             const container = section.querySelector('.cards-container');
             const cards = Array.from(container.querySelectorAll('.card'));
-            
+
             if (cards.length === 0) return;
-            
+
             // Criar estrutura Swiper
             const swiperWrapper = document.createElement('div');
             swiperWrapper.className = 'swiper cards-swiper';
-            
+
             const swiperContainer = document.createElement('div');
             swiperContainer.className = 'swiper-wrapper';
-            
+
             // Mover cards para swiper-wrapper e adicionar classe swiper-slide
             cards.forEach(card => {
                 card.classList.add('swiper-slide');
                 swiperContainer.appendChild(card);
             });
-            
+
             swiperWrapper.appendChild(swiperContainer);
-            
+
             // Adicionar navegação
             const nextBtn = document.createElement('div');
             nextBtn.className = 'swiper-button-next';
@@ -349,15 +350,15 @@ document.addEventListener('DOMContentLoaded', () => {
             prevBtn.className = 'swiper-button-prev';
             const pagination = document.createElement('div');
             pagination.className = 'swiper-pagination';
-            
+
             swiperWrapper.appendChild(nextBtn);
             swiperWrapper.appendChild(prevBtn);
             swiperWrapper.appendChild(pagination);
-            
+
             // Substituir container original
             container.parentNode.replaceChild(swiperWrapper, container);
         });
-        
+
         // Inicializar Swipers
         setTimeout(() => {
             initSwipers();
@@ -371,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (swiper) swiper.destroy(true, true);
         });
         swiperInstances = {};
-        
+
         // Criar Swiper para cada seção
         ['abertos', 'andamento', 'resolvidos'].forEach(sectionId => {
             const swiperEl = document.querySelector(`#${sectionId} .cards-swiper`);
@@ -440,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Filter by search term
-            const searchMatch = !currentSearchTerm || 
+            const searchMatch = !currentSearchTerm ||
                 title.includes(currentSearchTerm) ||
                 description.includes(currentSearchTerm) ||
                 id.includes(currentSearchTerm);
@@ -476,7 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const container = section.querySelector('.cards-container');
             const noResults = section.querySelector('.no-results');
             const hasCards = container.querySelectorAll('.card').length > 0;
-            
+
             if (noResults) {
                 noResults.style.display = hasCards ? 'none' : 'block';
             }
@@ -532,7 +533,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => {
             filterButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            
+
             currentFilter = btn.dataset.filter;
             console.log('Filter changed to:', currentFilter);
             console.log('Available systems in data:', [...new Set(allTickets.map(t => t['Sistema']))]);
@@ -544,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Rotation control
     toggleRotationBtn.addEventListener('click', () => {
         isRotationActive = !isRotationActive;
-        
+
         if (isRotationActive) {
             toggleRotationBtn.innerHTML = `
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
@@ -603,10 +604,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function showToast(message) {
         const toast = document.getElementById('toast');
         const toastMessage = document.getElementById('toastMessage');
-        
+
         toastMessage.textContent = message;
         toast.classList.add('show');
-        
+
         setTimeout(() => {
             toast.classList.remove('show');
         }, 3000);

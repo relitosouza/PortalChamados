@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,326 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #0f172a;
-            --accent-blue: #3b82f6;
-            --accent-blue-hover: #2563eb;
-            --success-green: #16a34a;
-            --warning-yellow: #d97706;
-            --danger-red: #dc2626;
-            --text-color: #475569;
-            --border-color: #e2e8f0;
-            --bg-color: #f8fafc;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-color);
-            color: var(--text-color);
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        header {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: white;
-            padding: 24px 0;
-            margin-bottom: 32px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        header h1 {
-            font-size: 1.75rem;
-            font-weight: 700;
-        }
-
-        .user-info {
-            margin-top: 8px;
-            font-size: 0.875rem;
-            opacity: 0.9;
-        }
-
-        .admin-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 24px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            border: 2px solid var(--border-color);
-        }
-
-        .card h2 {
-            font-size: 1.5rem;
-            color: var(--primary-color);
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--primary-color);
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            font-family: 'Inter', sans-serif;
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Inter', sans-serif;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background: var(--accent-blue);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--accent-blue-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-        }
-
-        .btn-success {
-            background: var(--success-green);
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #15803d;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .status-select {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .status-option {
-            padding: 16px;
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 600;
-        }
-
-        .status-option:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-
-        .status-option.aberto {
-            border-color: var(--danger-red);
-            color: var(--danger-red);
-        }
-
-        .status-option.aberto.selected {
-            background: var(--danger-red);
-            color: white;
-        }
-
-        .status-option.andamento {
-            border-color: var(--warning-yellow);
-            color: var(--warning-yellow);
-        }
-
-        .status-option.andamento.selected {
-            background: var(--warning-yellow);
-            color: white;
-        }
-
-        .status-option.resolvido {
-            border-color: var(--success-green);
-            color: var(--success-green);
-        }
-
-        .status-option.resolvido.selected {
-            background: var(--success-green);
-            color: white;
-        }
-
-        .timeline {
-            position: relative;
-            padding-left: 32px;
-        }
-
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 8px;
-            top: 8px;
-            bottom: 8px;
-            width: 2px;
-            background: var(--border-color);
-        }
-
-        .timeline-item {
-            position: relative;
-            padding-bottom: 24px;
-        }
-
-        .timeline-item::before {
-            content: '';
-            position: absolute;
-            left: -28px;
-            top: 4px;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: var(--accent-blue);
-            border: 3px solid white;
-            box-shadow: 0 0 0 2px var(--accent-blue);
-        }
-
-        .timeline-item:last-child {
-            padding-bottom: 0;
-        }
-
-        .timeline-content h4 {
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 4px;
-        }
-
-        .timeline-content p {
-            font-size: 0.875rem;
-            color: var(--text-color);
-        }
-
-        .timeline-date {
-            font-size: 0.8125rem;
-            color: #94a3b8;
-            font-weight: 500;
-        }
-
-        .alert {
-            padding: 16px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-
-        .alert-success {
-            background: #f0fdf4;
-            color: var(--success-green);
-            border: 2px solid #bbf7d0;
-        }
-
-        .alert-error {
-            background: #fef2f2;
-            color: var(--danger-red);
-            border: 2px solid #fecaca;
-        }
-
-        .alert-info {
-            background: #eff6ff;
-            color: var(--accent-blue);
-            border: 2px solid #bfdbfe;
-        }
-
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 0.6s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .chamado-info {
-            background: var(--bg-color);
-            padding: 16px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
-
-        .chamado-info h3 {
-            font-size: 1.125rem;
-            color: var(--primary-color);
-            margin-bottom: 8px;
-        }
-
-        .chamado-info p {
-            font-size: 0.9375rem;
-            color: var(--text-color);
-            margin-bottom: 4px;
-        }
-
-        @media (max-width: 768px) {
-            .admin-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .status-select {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="admin.css">
 </head>
+
 <body>
     <header>
         <div class="container">
@@ -378,10 +62,12 @@
                             <div class="status-option aberto" data-status="Aberto" onclick="selecionarStatus('Aberto')">
                                 ⚠️ Aberto
                             </div>
-                            <div class="status-option andamento" data-status="Em Andamento" onclick="selecionarStatus('Em Andamento')">
+                            <div class="status-option andamento" data-status="Em Andamento"
+                                onclick="selecionarStatus('Em Andamento')">
                                 🔄 Em Andamento
                             </div>
-                            <div class="status-option resolvido" data-status="Resolvido" onclick="selecionarStatus('Resolvido')">
+                            <div class="status-option resolvido" data-status="Resolvido"
+                                onclick="selecionarStatus('Resolvido')">
                                 ✅ Resolvido
                             </div>
                         </div>
@@ -389,11 +75,13 @@
 
                     <div class="form-group">
                         <label>Observação (opcional)</label>
-                        <textarea id="observacao" rows="3" placeholder="Adicione uma observação sobre esta mudança..."></textarea>
+                        <textarea id="observacao" rows="3"
+                            placeholder="Adicione uma observação sobre esta mudança..."></textarea>
                     </div>
 
                     <button class="btn btn-success" id="btnAtualizar" onclick="atualizarStatus()" disabled>
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                            stroke-width="2">
                             <path d="M5 10l3 3L18 3"></path>
                         </svg>
                         Atualizar Status
@@ -420,6 +108,7 @@
         </div>
     </div>
 
+    <script src="utils.js"></script>
     <script>
         // CONFIGURAÇÃO - SUBSTITUA PELA URL DO SEU APPS SCRIPT
         // ⚠️ IMPORTANTE: Configure a URL da sua API aqui!
@@ -429,32 +118,6 @@
         // 3. Tipo: "Aplicativo da Web"
         // 4. Acesso: "Qualquer pessoa"
         // 5. Copie a URL e cole abaixo
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwQF2Wo9DquQbr4pf5k7AjY0giqWB1wM6lkSam5Xju3JUAuOnhEqLI_Q5siRXSYKXCg/exec';
-        
-        // Validar se a API_URL foi configurada
-        if (API_URL === 'SUA_URL_DO_APPS_SCRIPT_AQUI') {
-            document.addEventListener('DOMContentLoaded', function() {
-                document.body.innerHTML = `
-                    <div style="max-width: 800px; margin: 100px auto; padding: 40px; background: #fee2e2; border: 3px solid #dc2626; border-radius: 16px; text-align: center;">
-                        <h1 style="color: #dc2626; margin-bottom: 20px;">⚠️ Configuração Necessária</h1>
-                        <p style="font-size: 18px; margin-bottom: 20px;">A API_URL não foi configurada!</p>
-                        <div style="background: white; padding: 20px; border-radius: 12px; text-align: left; margin: 20px 0;">
-                            <h3 style="margin-bottom: 15px;">📋 Como configurar:</h3>
-                            <ol style="line-height: 2; padding-left: 20px;">
-                                <li>Abra o Apps Script do Google</li>
-                                <li>Clique em <strong>"Implantar"</strong> > <strong>"Nova implantação"</strong></li>
-                                <li>Tipo: <strong>"Aplicativo da Web"</strong></li>
-                                <li>Quem tem acesso: <strong>"Qualquer pessoa"</strong></li>
-                                <li>Copie a URL gerada</li>
-                                <li>Cole a URL na linha 430 deste arquivo HTML</li>
-                            </ol>
-                        </div>
-                        <p style="color: #991b1b; font-weight: bold;">Edite o arquivo admin.html e configure a API_URL!</p>
-                    </div>
-                `;
-            });
-        }
-        const USER_EMAIL = 'seu.email@exemplo.com'; // Substitua pelo seu email
 
         let chamadoAtual = null;
         let statusSelecionado = null;
@@ -469,15 +132,16 @@
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    redirect: 'follow',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({
                         action: 'validarUsuario',
-                        email: USER_EMAIL
+                        email: ADMIN_CONFIG.userEmail
                     })
                 });
 
                 const result = await response.json();
-                
+
                 if (result.success && result.data.ativo) {
                     document.getElementById('userName').textContent = result.data.nome;
                 } else {
@@ -486,13 +150,13 @@
                 }
             } catch (error) {
                 console.error('Erro ao carregar usuário:', error);
-                document.getElementById('userName').textContent = USER_EMAIL;
+                document.getElementById('userName').textContent = ADMIN_CONFIG.userEmail;
             }
         }
 
         async function buscarChamado() {
             const id = document.getElementById('chamadoId').value.trim();
-            
+
             if (!id) {
                 mostrarAlerta('Digite o número do chamado', 'error');
                 return;
@@ -501,11 +165,9 @@
             mostrarAlerta('Buscando chamado...', 'info');
 
             try {
-                // Buscar dados do chamado na planilha (via CSV)
-                const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1VMM-9zck6eBwCpd-WZ_PUbzSLI9sFGz2L309H7CJFlc/gviz/tq?tqx=out:csv&gid=330906161';
                 const response = await fetch(SHEET_URL);
                 const csvText = await response.text();
-                
+
                 const chamados = parseCSV(csvText);
                 const chamado = chamados.find(c => c['Numero do Chamado'] === id);
 
@@ -526,14 +188,14 @@
 
         function mostrarDetalhesChamado(chamado) {
             chamadoAtual = chamado['Numero do Chamado'];
-            
+
             document.getElementById('chamadoTitulo').textContent = chamado['Titulo'];
             document.getElementById('chamadoStatusAtual').textContent = chamado['Status'];
             document.getElementById('chamadoSistema').textContent = chamado['Sistema'] || '-';
             document.getElementById('chamadoSolicitante').textContent = chamado['Solicitante'] || '-';
-            
+
             document.getElementById('chamadoDetalhes').style.display = 'block';
-            
+
             // Limpar seleção anterior
             document.querySelectorAll('.status-option').forEach(el => el.classList.remove('selected'));
             statusSelecionado = null;
@@ -542,12 +204,12 @@
 
         function selecionarStatus(status) {
             statusSelecionado = status;
-            
+
             // Atualizar UI
             document.querySelectorAll('.status-option').forEach(el => {
                 el.classList.remove('selected');
             });
-            
+
             document.querySelector(`[data-status="${status}"]`).classList.add('selected');
             document.getElementById('btnAtualizar').disabled = false;
         }
@@ -559,7 +221,7 @@
             }
 
             const statusAtual = dadosChamado['Status'];
-            
+
             if (statusAtual === statusSelecionado) {
                 mostrarAlerta('O chamado já está neste status', 'error');
                 return;
@@ -567,158 +229,99 @@
 
             const observacao = document.getElementById('observacao').value.trim();
             const btn = document.getElementById('btnAtualizar');
-            
+
             btn.disabled = true;
             btn.innerHTML = '<div class="loading"></div> Atualizando...';
-
-            console.log('=== DEBUG ATUALIZAÇÃO ===');
-            console.log('API_URL:', API_URL);
-            console.log('Payload:', {
-                action: 'atualizarStatus',
-                chamadoId: chamadoAtual,
-                novoStatus: statusSelecionado,
-                usuario: USER_EMAIL,
-                observacao: observacao
-            });
 
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // IMPORTANTE: Adicionar modo no-cors
-                    headers: { 'Content-Type': 'application/json' },
+                    redirect: 'follow',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({
                         action: 'atualizarStatus',
                         chamadoId: chamadoAtual,
                         novoStatus: statusSelecionado,
-                        usuario: USER_EMAIL,
+                        usuario: ADMIN_CONFIG.userEmail,
                         observacao: observacao
                     })
                 });
 
-                console.log('Response:', response);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
 
-                // Com no-cors, não conseguimos ler a resposta
-                // Então vamos assumir sucesso e verificar recarregando
-                mostrarAlerta('Status atualizado! Verificando...', 'info');
-                document.getElementById('observacao').value = '';
-                
-                // Aguardar 2 segundos e recarregar
-                setTimeout(() => {
-                    buscarChamado();
-                    mostrarAlerta('Status atualizado com sucesso!', 'success');
-                }, 2000);
+                const result = await response.json();
+
+                if (result.success) {
+                    mostrarAlerta('Status atualizado com sucesso! Pode levar até 5 minutos para a alteração refletir no portal devido ao cache da planilha.', 'success');
+                    document.getElementById('observacao').value = '';
+
+                    // Atualizar UI localmente pois a planilha tem cache de até 5 minutos
+                    if (dadosChamado) {
+                        dadosChamado['Status'] = statusSelecionado;
+                        mostrarDetalhesChamado(dadosChamado);
+                    }
+
+                    // Atualiza o histórico (a API busca os dados em tempo real, sem cache)
+                    carregarHistorico(chamadoAtual);
+                } else {
+                    throw new Error(result.message || 'Erro desconhecido ao atualizar');
+                }
 
             } catch (error) {
-                console.error('Erro completo:', error);
                 console.error('Erro ao atualizar status:', error);
                 mostrarAlerta('Erro ao atualizar: ' + error.message + ' - Verifique se a URL da API está correta', 'error');
             } finally {
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 10l3 3L18 3"></path></svg> Atualizar Status';
-                }, 2500);
+                btn.disabled = false;
+                btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 10l3 3L18 3"></path></svg> Atualizar Status';
             }
         }
 
         async function carregarHistorico(chamadoId) {
             const historicoDiv = document.getElementById('historico');
             historicoDiv.innerHTML = '<div class="alert alert-info">Carregando histórico...</div>';
-            
+
             try {
-                console.log('Buscando histórico para:', chamadoId);
-                console.log('API URL:', API_URL);
-                
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // Importante para CORS
-                    headers: { 
-                        'Content-Type': 'application/json'
-                    },
+                    redirect: 'follow',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({
                         action: 'obterHistorico',
                         chamadoId: chamadoId
                     })
                 });
 
-                console.log('Response recebida');
-                
-                // Com no-cors, não conseguimos ler a resposta
-                // Vamos assumir sucesso e tentar buscar novamente sem no-cors
-                // para verificar o resultado
-                
-                // Tentar novamente para pegar o resultado
-                const response2 = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        action: 'obterHistorico',
-                        chamadoId: chamadoId
-                    })
-                }).catch(err => {
-                    console.log('Erro na segunda tentativa (esperado com CORS):', err);
-                    // Se falhar, aguardar um pouco e recarregar
-                    return null;
-                });
-                
-                if (response2 && response2.ok) {
-                    const result = await response2.json();
-                    console.log('Resultado do histórico:', result);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
 
-                    if (result.success) {
-                        if (result.data && result.data.length > 0) {
-                            renderizarHistorico(result.data);
-                        } else {
-                            historicoDiv.innerHTML = '<div class="alert alert-info">📋 Nenhum histórico encontrado para este chamado</div>';
-                        }
+                const result = await response.json();
+
+                if (result.success) {
+                    if (result.data && result.data.length > 0) {
+                        renderizarHistorico(result.data);
                     } else {
-                        throw new Error(result.message || 'Erro ao buscar histórico');
+                        historicoDiv.innerHTML = '<div class="alert alert-info">Nenhum histórico encontrado para este chamado.</div>';
                     }
                 } else {
-                    // Se não conseguiu buscar, aguardar e recarregar página
-                    setTimeout(() => {
-                        historicoDiv.innerHTML = `
-                            <div class="alert alert-warning">
-                                <p><strong>⏳ Aguarde...</strong></p>
-                                <p>Recarregando histórico automaticamente...</p>
-                            </div>
-                        `;
-                        // Tentar recarregar após 2 segundos
-                        setTimeout(() => carregarHistorico(chamadoId), 2000);
-                    }, 1000);
+                    throw new Error(result.message || 'Erro ao buscar histórico');
                 }
             } catch (error) {
-                console.error('Erro ao carregar histórico:', error);
-                
-                // Se for erro de rede, pode ser CORS - vamos assumir que funcionou
-                if (error.message.includes('fetch') || error.message.includes('CORS') || error.message.includes('Failed')) {
-                    historicoDiv.innerHTML = `
-                        <div class="alert alert-warning">
-                            <p><strong>⚠️ Limitação de CORS</strong></p>
-                            <p>O histórico foi solicitado, mas não podemos verificar a resposta devido a restrições do navegador.</p>
-                            <p style="margin-top: 10px;">
-                                <button onclick="location.reload()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer;">
-                                    🔄 Recarregar Página
-                                </button>
-                            </p>
-                        </div>
-                    `;
-                } else {
-                    historicoDiv.innerHTML = `
-                        <div class="alert alert-error">
-                            <strong>❌ Erro ao carregar histórico</strong><br>
-                            ${error.message}<br><br>
-                            <small>Verifique se:</small>
-                            <ul style="margin-top: 8px; padding-left: 20px;">
-                                <li>A API_URL está configurada corretamente</li>
-                                <li>O script está implantado como "Aplicativo da Web"</li>
-                                <li>O acesso está configurado como "Qualquer pessoa"</li>
-                                <li>O chamado existe na planilha</li>
-                            </ul>
-                        </div>
-                    `;
-                }
+                historicoDiv.innerHTML = `
+                    <div class="alert alert-error">
+                        <strong>Erro ao carregar histórico</strong><br>
+                        ${escapeHTML(error.message)}<br><br>
+                        <small>Verifique se:</small>
+                        <ul style="margin-top: 8px; padding-left: 20px;">
+                            <li>A API_URL em utils.js está configurada corretamente</li>
+                            <li>O script está implantado como "Aplicativo da Web"</li>
+                            <li>O acesso está configurado como "Qualquer pessoa"</li>
+                            <li>O chamado existe na planilha</li>
+                        </ul>
+                    </div>
+                `;
             }
         }
 
@@ -728,16 +331,16 @@
                     ${historico.map(item => `
                         <div class="timeline-item">
                             <div class="timeline-content">
-                                <h4>${item.statusAnterior} → ${item.statusNovo}</h4>
-                                <p>por ${item.usuario}</p>
-                                ${item.observacao ? `<p><em>"${item.observacao}"</em></p>` : ''}
-                                <span class="timeline-date">${formatarData(item.timestamp)}</span>
+                                <h4>${escapeHTML(item.statusAnterior)} → ${escapeHTML(item.statusNovo)}</h4>
+                                <p>por ${escapeHTML(item.usuario)}</p>
+                                ${item.observacao ? `<p><em>"${escapeHTML(item.observacao)}"</em></p>` : ''}
+                                <span class="timeline-date">${escapeHTML(formatarData(item.timestamp))}</span>
                             </div>
                         </div>
                     `).join('')}
                 </div>
             `;
-            
+
             document.getElementById('historico').innerHTML = html;
         }
 
@@ -754,60 +357,14 @@
 
         function mostrarAlerta(mensagem, tipo) {
             const container = document.getElementById('alertContainer');
-            container.innerHTML = `<div class="alert alert-${tipo}">${mensagem}</div>`;
+            container.innerHTML = `<div class="alert alert-${escapeHTML(tipo)}">${escapeHTML(mensagem)}</div>`;
         }
 
         function limparAlerta() {
             document.getElementById('alertContainer').innerHTML = '';
         }
 
-        function parseCSV(csvText) {
-            const rows = [];
-            let currentRow = [];
-            let currentVal = '';
-            let inQuotes = false;
-            const text = csvText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-
-            for (let i = 0; i < text.length; i++) {
-                const char = text[i];
-                const nextChar = text[i + 1];
-
-                if (char === '"') {
-                    if (inQuotes && nextChar === '"') {
-                        currentVal += '"';
-                        i++;
-                    } else {
-                        inQuotes = !inQuotes;
-                    }
-                } else if (char === ',' && !inQuotes) {
-                    currentRow.push(currentVal);
-                    currentVal = '';
-                } else if (char === '\n' && !inQuotes) {
-                    currentRow.push(currentVal);
-                    if (currentRow.length > 0) rows.push(currentRow);
-                    currentRow = [];
-                    currentVal = '';
-                } else {
-                    currentVal += char;
-                }
-            }
-
-            if (currentVal || currentRow.length > 0) {
-                currentRow.push(currentVal);
-                rows.push(currentRow);
-            }
-
-            if (rows.length === 0) return [];
-
-            const headers = rows[0].map(h => h.trim());
-            return rows.slice(1).map(values => {
-                const obj = {};
-                headers.forEach((header, index) => {
-                    obj[header] = values[index] ? values[index].trim() : '';
-                });
-                return obj;
-            });
-        }
     </script>
 </body>
+
 </html>
