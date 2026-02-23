@@ -1,0 +1,6 @@
+# Claude Code agent cache
+.agent/
+.claude/
+
+# Git subfolder (empty nested repo)
+PortalChamados/

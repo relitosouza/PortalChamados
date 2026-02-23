@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Chamados Smarapd</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Swiper CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="header-brand">
+                    <div class="header-logo">
+                        <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+                            <path d="M3 7h20M3 13h13M3 19h16" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1>Portal de Chamados</h1>
+                        <p class="header-subtitle">Smarapd · Equipe de Campo</p>
+                    </div>
+                </div>
+                <div class="rotation-indicator">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                        <path d="M8 2V4M8 12V14M14 8H12M4 8H2M12.5 12.5L11 11M5 5L3.5 3.5M12.5 3.5L11 5M5 11L3.5 12.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span>Rotação ativa</span>
+                    <button id="toggleRotation" class="rotation-toggle" aria-label="Pausar rotação">
+                        <svg width="11" height="11" viewBox="0 0 12 12" fill="currentColor">
+                            <rect x="2" y="2" width="3" height="8"/>
+                            <rect x="7" y="2" width="3" height="8"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="#" class="active" data-target="abertos">
+                    Chamados Abertos
+                    <span class="badge-count" data-section="abertos">0</span>
+                </a></li>
+                <li><a href="#" data-target="andamento">
+                    Chamados em Andamento
+                    <span class="badge-count" data-section="andamento">0</span>
+                </a></li>
+                <li><a href="#" data-target="resolvidos">
+                    Chamados Resolvidos
+                    <span class="badge-count" data-section="resolvidos">0</span>
+                </a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="filters-bar">
+        <div class="container">
+            <div class="search-box">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16zM19 19l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <input type="text" id="searchInput" placeholder="Buscar por título, número ou assunto...">
+                <button id="clearSearch" class="clear-btn" aria-label="Limpar busca">×</button>
+            </div>
+            <div class="filter-buttons">
+                <span class="filter-label">Sistema:</span>
+                <button class="filter-btn active" data-filter="all">Todos</button>
+                <button class="filter-btn" data-filter="cp">
+                    <span class="filter-dot cp"></span>
+                    CP
+                </button>
+                <button class="filter-btn" data-filter="am">
+                    <span class="filter-dot am"></span>
+                    AM
+                </button>
+                <button class="filter-btn" data-filter="transparencia">
+                    <span class="filter-dot transparencia"></span>
+                    Transparência
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <main class="container">
+        <section id="abertos" class="active">
+            <h2>Chamados Abertos</h2>
+            <div class="cards-container">
+                <p class="loading-text">Carregando chamados...</p>
+            </div>
+            <p class="no-results" style="display: none;">Nenhum chamado encontrado com os filtros aplicados.</p>
+        </section>
+
+        <section id="andamento">
+            <h2>Chamados em Andamento</h2>
+            <div class="cards-container">
+                <p class="loading-text">Carregando chamados...</p>
+            </div>
+            <p class="no-results" style="display: none;">Nenhum chamado encontrado com os filtros aplicados.</p>
+        </section>
+
+        <section id="resolvidos">
+            <h2>Chamados Resolvidos</h2>
+            <div class="cards-container">
+                <p class="loading-text">Carregando chamados...</p>
+            </div>
+            <p class="no-results" style="display: none;">Nenhum chamado encontrado com os filtros aplicados.</p>
+        </section>
+    </main>
+
+    <!-- Swiper JS -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script src="utils.js"></script>
+    <script src="script.js"></script>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/>
+            <path d="M6 10L9 13L14 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span id="toastMessage">Chamados atualizados!</span>
+    </div>
+</body>
+
+</html>
