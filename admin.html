@@ -254,13 +254,17 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    mostrarAlerta('Status atualizado com sucesso!', 'success');
+                    mostrarAlerta('Status atualizado com sucesso! Pode levar até 5 minutos para a alteração refletir no portal devido ao cache da planilha.', 'success');
                     document.getElementById('observacao').value = '';
 
-                    // Recarregar dados do chamado para refletir a mudança
-                    setTimeout(() => {
-                        buscarChamado();
-                    }, 1000);
+                    // Atualizar UI localmente pois a planilha tem cache de até 5 minutos
+                    if (dadosChamado) {
+                        dadosChamado['Status'] = statusSelecionado;
+                        mostrarDetalhesChamado(dadosChamado);
+                    }
+
+                    // Atualiza o histórico (a API busca os dados em tempo real, sem cache)
+                    carregarHistorico(chamadoAtual);
                 } else {
                     throw new Error(result.message || 'Erro desconhecido ao atualizar');
                 }
