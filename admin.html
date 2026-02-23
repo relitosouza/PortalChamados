@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="admin.css">
 </head>
+
 <body>
     <header>
         <div class="container">
@@ -60,10 +62,12 @@
                             <div class="status-option aberto" data-status="Aberto" onclick="selecionarStatus('Aberto')">
                                 ⚠️ Aberto
                             </div>
-                            <div class="status-option andamento" data-status="Em Andamento" onclick="selecionarStatus('Em Andamento')">
+                            <div class="status-option andamento" data-status="Em Andamento"
+                                onclick="selecionarStatus('Em Andamento')">
                                 🔄 Em Andamento
                             </div>
-                            <div class="status-option resolvido" data-status="Resolvido" onclick="selecionarStatus('Resolvido')">
+                            <div class="status-option resolvido" data-status="Resolvido"
+                                onclick="selecionarStatus('Resolvido')">
                                 ✅ Resolvido
                             </div>
                         </div>
@@ -71,11 +75,13 @@
 
                     <div class="form-group">
                         <label>Observação (opcional)</label>
-                        <textarea id="observacao" rows="3" placeholder="Adicione uma observação sobre esta mudança..."></textarea>
+                        <textarea id="observacao" rows="3"
+                            placeholder="Adicione uma observação sobre esta mudança..."></textarea>
                     </div>
 
                     <button class="btn btn-success" id="btnAtualizar" onclick="atualizarStatus()" disabled>
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                            stroke-width="2">
                             <path d="M5 10l3 3L18 3"></path>
                         </svg>
                         Atualizar Status
@@ -126,7 +132,8 @@
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    redirect: 'follow',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({
                         action: 'validarUsuario',
                         email: ADMIN_CONFIG.userEmail
@@ -134,7 +141,7 @@
                 });
 
                 const result = await response.json();
-                
+
                 if (result.success && result.data.ativo) {
                     document.getElementById('userName').textContent = result.data.nome;
                 } else {
@@ -149,7 +156,7 @@
 
         async function buscarChamado() {
             const id = document.getElementById('chamadoId').value.trim();
-            
+
             if (!id) {
                 mostrarAlerta('Digite o número do chamado', 'error');
                 return;
@@ -160,7 +167,7 @@
             try {
                 const response = await fetch(SHEET_URL);
                 const csvText = await response.text();
-                
+
                 const chamados = parseCSV(csvText);
                 const chamado = chamados.find(c => c['Numero do Chamado'] === id);
 
@@ -181,14 +188,14 @@
 
         function mostrarDetalhesChamado(chamado) {
             chamadoAtual = chamado['Numero do Chamado'];
-            
+
             document.getElementById('chamadoTitulo').textContent = chamado['Titulo'];
             document.getElementById('chamadoStatusAtual').textContent = chamado['Status'];
             document.getElementById('chamadoSistema').textContent = chamado['Sistema'] || '-';
             document.getElementById('chamadoSolicitante').textContent = chamado['Solicitante'] || '-';
-            
+
             document.getElementById('chamadoDetalhes').style.display = 'block';
-            
+
             // Limpar seleção anterior
             document.querySelectorAll('.status-option').forEach(el => el.classList.remove('selected'));
             statusSelecionado = null;
@@ -197,12 +204,12 @@
 
         function selecionarStatus(status) {
             statusSelecionado = status;
-            
+
             // Atualizar UI
             document.querySelectorAll('.status-option').forEach(el => {
                 el.classList.remove('selected');
             });
-            
+
             document.querySelector(`[data-status="${status}"]`).classList.add('selected');
             document.getElementById('btnAtualizar').disabled = false;
         }
@@ -214,7 +221,7 @@
             }
 
             const statusAtual = dadosChamado['Status'];
-            
+
             if (statusAtual === statusSelecionado) {
                 mostrarAlerta('O chamado já está neste status', 'error');
                 return;
@@ -222,15 +229,15 @@
 
             const observacao = document.getElementById('observacao').value.trim();
             const btn = document.getElementById('btnAtualizar');
-            
+
             btn.disabled = true;
             btn.innerHTML = '<div class="loading"></div> Atualizando...';
 
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // IMPORTANTE: Adicionar modo no-cors
-                    headers: { 'Content-Type': 'application/json' },
+                    redirect: 'follow',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({
                         action: 'atualizarStatus',
                         chamadoId: chamadoAtual,
@@ -240,26 +247,30 @@
                     })
                 });
 
-                // Com no-cors, não conseguimos ler a resposta
-                // Então vamos assumir sucesso e verificar recarregando
-                mostrarAlerta('Status atualizado! Verificando...', 'info');
-                document.getElementById('observacao').value = '';
-                
-                // Aguardar 2 segundos e recarregar
-                setTimeout(() => {
-                    buscarChamado();
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
                     mostrarAlerta('Status atualizado com sucesso!', 'success');
-                }, 2000);
+                    document.getElementById('observacao').value = '';
+
+                    // Recarregar dados do chamado para refletir a mudança
+                    setTimeout(() => {
+                        buscarChamado();
+                    }, 1000);
+                } else {
+                    throw new Error(result.message || 'Erro desconhecido ao atualizar');
+                }
 
             } catch (error) {
-                console.error('Erro completo:', error);
                 console.error('Erro ao atualizar status:', error);
                 mostrarAlerta('Erro ao atualizar: ' + error.message + ' - Verifique se a URL da API está correta', 'error');
             } finally {
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 10l3 3L18 3"></path></svg> Atualizar Status';
-                }, 2500);
+                btn.disabled = false;
+                btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 10l3 3L18 3"></path></svg> Atualizar Status';
             }
         }
 
@@ -270,7 +281,8 @@
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    redirect: 'follow',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({
                         action: 'obterHistorico',
                         chamadoId: chamadoId
@@ -350,4 +362,5 @@
 
     </script>
 </body>
+
 </html>
