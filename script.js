@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Detectar se é dispositivo móvel (PRIMEIRO)
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
-    
+
     const navLinks = document.querySelectorAll('nav a');
     const sections = document.querySelectorAll('section');
     const searchInput = document.getElementById('searchInput');
@@ -9,17 +9,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterButtons = document.querySelectorAll('.filter-btn');
     const toggleRotationBtn = document.getElementById('toggleRotation');
     const rotationIndicator = document.querySelector('.rotation-indicator');
-    
+    const refreshButtons = document.querySelectorAll('.btn-refresh');
+
+    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1VMM-9zck6eBwCpd-WZ_PUbzSLI9sFGz2L309H7CJFlc/gviz/tq?tqx=out:csv&gid=330906161';
+
     const rotationOrder = ['abertos', 'andamento', 'resolvidos'];
     let currentIndex = 0;
-    const rotationIntervalTime = 20000; // 20 seconds
+    const rotationIntervalTime = 20000; // 5 seconds
     let rotationInterval;
     let isRotationActive = true;
-    
+
     let allTickets = [];
     let currentFilter = 'all';
     let currentSearchTerm = '';
-    
+
     // Swiper instances
     let swiperInstances = {};
 
@@ -27,17 +30,18 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchTickets();
 
     // Auto-refresh quando a página voltar ao foco (usuário voltou da página de detalhes)
-    let isFirstLoad = true;
-    let lastFetchTime = 0;
+    let lastFetchTime = Date.now();
     const AUTO_REFRESH_INTERVAL = 10000; // 10 segundos de intervalo mínimo entre refreshes
 
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
             // Página voltou ao foco
             const timeSinceLastFetch = Date.now() - lastFetchTime;
-            
+
             if (timeSinceLastFetch > AUTO_REFRESH_INTERVAL) {
+                console.log('Página voltou ao foco - atualizando chamados...');
                 fetchTickets();
+                lastFetchTime = Date.now();
             }
         }
     });
@@ -45,35 +49,43 @@ document.addEventListener('DOMContentLoaded', () => {
     // Refresh periódico a cada 2 minutos (enquanto a página estiver visível)
     setInterval(() => {
         if (!document.hidden) {
+            console.log('Refresh automático - atualizando chamados...');
             fetchTickets();
+            lastFetchTime = Date.now();
         }
     }, 120000); // 2 minutos
 
     function fetchTickets() {
+        console.log('Fetching tickets...');
+        console.log('isMobile:', isMobile);
+        console.log('SHEET_URL:', SHEET_URL);
+
         fetch(SHEET_URL)
             .then(response => {
+                console.log('Response status:', response.status);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 return response.text();
             })
             .then(csvText => {
+                console.log('CSV received, length:', csvText.length);
                 if (csvText.includes('<!DOCTYPE html>') || csvText.includes('<html')) {
                     throw new Error('Received HTML instead of CSV. Check sheet permissions.');
                 }
 
                 const tickets = parseCSV(csvText);
+                console.log('Parsed tickets:', tickets.length, 'tickets');
+                console.log('First ticket:', tickets[0]);
                 allTickets = tickets;
                 renderTickets(tickets);
                 updateCounts();
-                
+
                 // Mostrar toast apenas se não for o primeiro carregamento
-                if (!isFirstLoad) {
+                if (lastFetchTime > 0) {
                     showToast('Chamados atualizados!');
                 }
-                isFirstLoad = false;
-                lastFetchTime = Date.now();
-                
+
                 if (!rotationInterval) {
                     startRotation();
                 }
@@ -84,13 +96,70 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
+    function parseCSV(csvText) {
+        const rows = [];
+        let currentRow = [];
+        let currentVal = '';
+        let inQuotes = false;
+
+        const text = csvText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+            const nextChar = text[i + 1];
+
+            if (char === '"') {
+                if (inQuotes && nextChar === '"') {
+                    currentVal += '"';
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (char === ',' && !inQuotes) {
+                currentRow.push(currentVal);
+                currentVal = '';
+            } else if (char === '\n' && !inQuotes) {
+                currentRow.push(currentVal);
+                if (currentRow.length > 0) {
+                    rows.push(currentRow);
+                }
+                currentRow = [];
+                currentVal = '';
+            } else {
+                currentVal += char;
+            }
+        }
+
+        if (currentVal || currentRow.length > 0) {
+            currentRow.push(currentVal);
+            rows.push(currentRow);
+        }
+
+        if (rows.length === 0) return [];
+
+        const headers = rows[0].map(h => h.trim());
+        const data = rows.slice(1).map(values => {
+            const ticket = {};
+            headers.forEach((header, index) => {
+                const val = values[index] !== undefined ? values[index] : '';
+                ticket[header] = val.trim();
+            });
+            return ticket;
+        });
+
+        return data;
+    }
+
     function renderTickets(tickets) {
+        console.log('renderTickets called with', tickets.length, 'tickets');
+
         // Clear all containers
         document.querySelector('#abertos .cards-container').innerHTML = '';
         document.querySelector('#andamento .cards-container').innerHTML = '';
         document.querySelector('#resolvidos .cards-container').innerHTML = '';
 
         const filteredTickets = filterTickets(tickets);
+        console.log('Filtered tickets:', filteredTickets.length);
 
         filteredTickets.forEach(ticket => {
             const id = ticket['Numero do Chamado'];
@@ -99,12 +168,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const statusRaw = ticket['Status'] ? ticket['Status'].toLowerCase() : '';
             const timestamp = ticket['Carimbo de data/hora'];
             const system = ticket['Sistema'] ? ticket['Sistema'].trim() : '';
-            
+
             // Tentar pegar solicitante de várias formas possíveis
             // Testa variações comuns do nome da coluna
             const possibleRequesterKeys = [
                 'Solicitante',
-                'solicitante', 
+                'solicitante',
                 'SOLICITANTE',
                 'Nome do Solicitante',
                 'Nome Solicitante',
@@ -114,9 +183,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 'Usuario',
                 'Nome'
             ];
-            
+
             let requester = 'Não informado';
-            
+
             // Procura a primeira coluna que existe e tem valor
             for (const key of possibleRequesterKeys) {
                 if (ticket[key] && ticket[key].trim()) {
@@ -124,20 +193,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
                 }
             }
-            
+
             // Se ainda não encontrou, tenta buscar por coluna que contenha "solicit" ou "nome"
             if (requester === 'Não informado') {
                 const keys = Object.keys(ticket);
                 for (const key of keys) {
                     const lowerKey = key.toLowerCase();
-                    if ((lowerKey.includes('solicit') || lowerKey.includes('nome') || lowerKey.includes('criado') || lowerKey.includes('usuario') || lowerKey.includes('usuário')) 
+                    if ((lowerKey.includes('solicit') || lowerKey.includes('nome') || lowerKey.includes('criado') || lowerKey.includes('usuario') || lowerKey.includes('usuário'))
                         && ticket[key] && ticket[key].trim() && ticket[key].trim() !== '') {
                         requester = ticket[key].trim();
+                        console.log(`Campo solicitante encontrado na coluna: "${key}" = "${requester}"`);
                         break;
                     }
                 }
             }
-            
+
+            // Log para debug - mostrar todos os campos do primeiro ticket
+            if (filteredTickets.indexOf(ticket) === 0) {
+                console.log('=== DEBUG SOLICITANTE ===');
+                console.log('Todas as colunas disponíveis:', Object.keys(ticket));
+                console.log('Ticket completo:', ticket);
+                console.log('Solicitante selecionado:', requester);
+                console.log('========================');
+            }
+
             let targetSectionId = '';
             let statusClass = '';
             let statusLabel = '';
@@ -154,6 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 targetSectionId = 'resolvidos';
                 statusClass = 'status-resolvido';
                 statusLabel = 'Resolvido';
+
             } else {
                 return;
             }
@@ -164,11 +244,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 .replace(/\s+/g, ' ')            // Substitui múltiplos espaços por um único
                 .split(' ')                       // Divide em palavras
                 .filter(word => word.length > 0); // Remove strings vazias
-            
-            const truncatedDescription = words.length > 12 
-                ? words.slice(0, 12).join(' ') + '...' 
+
+            const truncatedDescription = words.length > 12
+                ? words.slice(0, 12).join(' ') + '...'
                 : description.trim();
-            
+
+            // Debug: log se descrição foi truncada
+            if (words.length > 12) {
+                console.log(`Descrição truncada: ${words.length} palavras -> 12 palavras (ID: ${id})`);
+            }
+
             // System Badge Class - normalized comparison
             let systemClass = '';
             const systemNormalized = system.toLowerCase().trim();
@@ -187,23 +272,23 @@ document.addEventListener('DOMContentLoaded', () => {
             card.dataset.title = title.toLowerCase();
             card.dataset.description = description.toLowerCase();
 
-            const timeDisplay = timestamp ? `Aberto em: ${escapeHTML(timestamp)}` : '';
+            const timeDisplay = timestamp ? `Aberto em: ${timestamp}` : '';
 
             card.innerHTML = `
                 <div class="card-header">
-                    <span class="ticket-id">#${escapeHTML(id)}</span>
-                    <span class="status-badge">${escapeHTML(statusLabel)}</span>
-                    ${system ? `<span class="system-badge ${systemClass}">${escapeHTML(system)}</span>` : ''}
+                    <span class="ticket-id">#${id}</span>
+                    <span class="status-badge">${statusLabel}</span>
+                    ${system ? `<span class="system-badge ${systemClass}">${system}</span>` : ''}
                 </div>
-                <h3>${escapeHTML(title)}</h3>
+                <h3>${title}</h3>
                 <div class="card-requester">
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path d="M8 8C10.2091 8 12 6.20914 12 4C12 1.79086 10.2091 0 8 0C5.79086 0 4 1.79086 4 4C4 6.20914 5.79086 8 8 8Z" fill="currentColor"/>
                         <path d="M8 10C4.13401 10 1 11.567 1 13.5V16H15V13.5C15 11.567 11.866 10 8 10Z" fill="currentColor"/>
                     </svg>
-                    <span>${escapeHTML(requester)}</span>
+                    <span>${requester}</span>
                 </div>
-                <p title="${escapeHTML(description)}">${escapeHTML(truncatedDescription)}</p>
+                <p title="${description}">${truncatedDescription}</p>
                 <div class="card-footer">
                     <span>${timeDisplay}</span>
                     <a href="detalhes.html?id=${encodeURIComponent(id)}" class="btn-details">Ver Detalhes</a>
@@ -218,13 +303,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Show "no results" message if needed — must be called BEFORE convertToSwiper
-        // because convertToSwiper replaces .cards-container with .cards-swiper
+        console.log('Cards renderizados. Verificando conversão para Swiper...');
+        console.log('Total de cards em #abertos:', document.querySelectorAll('#abertos .card').length);
+        console.log('Total de cards em #andamento:', document.querySelectorAll('#andamento .card').length);
+        console.log('Total de cards em #resolvidos:', document.querySelectorAll('#resolvidos .card').length);
+
+        // Show "no results" message if needed
         updateNoResultsMessage();
 
         // Converter para Swiper apenas no desktop
         if (!isMobile) {
+            console.log('Desktop detectado - convertendo para Swiper...');
             convertToSwiper();
+        } else {
+            console.log('Mobile detectado - mantendo grid normal');
         }
     }
 
@@ -234,24 +326,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const section = document.getElementById(sectionId);
             const container = section.querySelector('.cards-container');
             const cards = Array.from(container.querySelectorAll('.card'));
-            
+
             if (cards.length === 0) return;
-            
+
             // Criar estrutura Swiper
             const swiperWrapper = document.createElement('div');
             swiperWrapper.className = 'swiper cards-swiper';
-            
+
             const swiperContainer = document.createElement('div');
             swiperContainer.className = 'swiper-wrapper';
-            
+
             // Mover cards para swiper-wrapper e adicionar classe swiper-slide
             cards.forEach(card => {
                 card.classList.add('swiper-slide');
                 swiperContainer.appendChild(card);
             });
-            
+
             swiperWrapper.appendChild(swiperContainer);
-            
+
             // Adicionar navegação
             const nextBtn = document.createElement('div');
             nextBtn.className = 'swiper-button-next';
@@ -259,15 +351,15 @@ document.addEventListener('DOMContentLoaded', () => {
             prevBtn.className = 'swiper-button-prev';
             const pagination = document.createElement('div');
             pagination.className = 'swiper-pagination';
-            
+
             swiperWrapper.appendChild(nextBtn);
             swiperWrapper.appendChild(prevBtn);
             swiperWrapper.appendChild(pagination);
-            
+
             // Substituir container original
             container.parentNode.replaceChild(swiperWrapper, container);
         });
-        
+
         // Inicializar Swipers
         setTimeout(() => {
             initSwipers();
@@ -281,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (swiper) swiper.destroy(true, true);
         });
         swiperInstances = {};
-        
+
         // Criar Swiper para cada seção
         ['abertos', 'andamento', 'resolvidos'].forEach(sectionId => {
             const swiperEl = document.querySelector(`#${sectionId} .cards-swiper`);
@@ -350,7 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Filter by search term
-            const searchMatch = !currentSearchTerm || 
+            const searchMatch = !currentSearchTerm ||
                 title.includes(currentSearchTerm) ||
                 description.includes(currentSearchTerm) ||
                 id.includes(currentSearchTerm);
@@ -386,7 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const container = section.querySelector('.cards-container');
             const noResults = section.querySelector('.no-results');
             const hasCards = container.querySelectorAll('.card').length > 0;
-            
+
             if (noResults) {
                 noResults.style.display = hasCards ? 'none' : 'block';
             }
@@ -442,8 +534,10 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => {
             filterButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            
+
             currentFilter = btn.dataset.filter;
+            console.log('Filter changed to:', currentFilter);
+            console.log('Available systems in data:', [...new Set(allTickets.map(t => t['Sistema']))]);
             renderTickets(allTickets);
             updateCounts();
         });
@@ -452,7 +546,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Rotation control
     toggleRotationBtn.addEventListener('click', () => {
         isRotationActive = !isRotationActive;
-        
+
         if (isRotationActive) {
             toggleRotationBtn.innerHTML = `
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
@@ -507,14 +601,32 @@ document.addEventListener('DOMContentLoaded', () => {
         rotationInterval = setInterval(rotateView, rotationIntervalTime);
     }
 
+    // Refresh functionalities
+    refreshButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const icon = btn.querySelector('svg');
+            if (icon) {
+                icon.style.transform = 'rotate(180deg)';
+                setTimeout(() => {
+                    icon.style.transition = 'none';
+                    icon.style.transform = 'none';
+                    setTimeout(() => icon.style.transition = '', 50);
+                }, 500);
+            }
+
+            showToast('Atualizando chamados...');
+            fetchTickets();
+        });
+    });
+
     // Função para mostrar toast de notificação
     function showToast(message) {
         const toast = document.getElementById('toast');
         const toastMessage = document.getElementById('toastMessage');
-        
+
         toastMessage.textContent = message;
         toast.classList.add('show');
-        
+
         setTimeout(() => {
             toast.classList.remove('show');
         }, 3000);

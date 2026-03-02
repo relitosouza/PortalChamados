@@ -183,8 +183,13 @@ header h1 {
 }
 
 @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .rotation-toggle {
@@ -345,7 +350,7 @@ nav a.active .badge-count {
     border-radius: 50%;
 }
 
-.search-box input:not(:placeholder-shown) ~ .clear-btn {
+.search-box input:not(:placeholder-shown)~.clear-btn {
     opacity: 0.55;
     display: block;
 }
@@ -444,6 +449,7 @@ section.active {
         opacity: 0;
         transform: translateY(14px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -471,6 +477,51 @@ h2::before {
     border-radius: 4px;
     flex-shrink: 0;
     vertical-align: middle;
+}
+
+/* Section Header */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.section-header h2 {
+    margin-bottom: 0;
+}
+
+.btn-refresh {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all var(--transition-speed) var(--transition-timing);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-refresh:hover {
+    background: var(--accent-light);
+    color: var(--accent-blue);
+    border-color: var(--accent-blue);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-refresh svg {
+    transition: transform 0.5s ease;
+}
+
+.btn-refresh:hover svg {
+    transform: rotate(180deg);
 }
 
 /* ===== CARDS CONTAINER ===== */
@@ -743,6 +794,7 @@ h2::before {
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
+    line-clamp: 3;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     max-height: 4.95em;
@@ -849,8 +901,16 @@ h2::before {
 }
 
 @keyframes fadeOut {
-    from { opacity: 1; transform: scale(1); }
-    to { opacity: 0; transform: scale(0.97); display: none; }
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(0.97);
+        display: none;
+    }
 }
 
 /* ===== TOAST ===== */
