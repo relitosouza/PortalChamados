@@ -46,14 +46,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Refresh periódico a cada 2 minutos (enquanto a página estiver visível)
+    // Refresh periódico a cada 1 minuto (garantido mesmo sem interação)
     setInterval(() => {
-        if (!document.hidden) {
-            console.log('Refresh automático - atualizando chamados...');
-            fetchTickets();
-            lastFetchTime = Date.now();
-        }
-    }, 120000); // 2 minutos
+        console.log('Refresh automático - atualizando chamados...');
+        fetchTickets();
+        lastFetchTime = Date.now();
+    }, 60000); // 1 minuto
 
     function fetchTickets() {
         console.log('Fetching tickets...');
